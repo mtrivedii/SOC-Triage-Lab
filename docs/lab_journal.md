@@ -59,3 +59,10 @@ Observations that affect the parser and detectors:
 - Kali -> target ping works (2/2, ~1 ms).
 - ufw logging level set to `high` (to avoid rate limiting of blocked packets). Not yet confirmed with `ufw status verbose`.
 - Next: take `clean-base` snapshots (target and Kali clone), then run a calibration scan to measure how many ufw log lines a scan produces.
+
+## Calibration scan: how much of a port scan reaches ufw.log (2026-10-21, ~16:25 UTC) - NOT a case
+- Command (Kali -> target): `sudo nmap -sS -p 1-5000 -T4 192.168.214.129`. nmap: 4998 filtered (no response), ports 22 and 80 open, finished in 18.56 s.
+- Target ufw logging level `high`. `UFW BLOCK` lines in ufw.log: 29 before, 3911 after (+3882). Distinct `DPT=` values among all BLOCK lines: 1985 (includes ~29 earlier noise lines).
+- Interpretation: the log holds only a fraction of the scanned ports (about 40% distinct), so some packets are not logged even at `high`. Cause not confirmed (possible kernel or rsyslog rate limiting). Retransmissions at -T4 may also mean several lines per port.
+- Consequence: port-scan detector should key on many distinct destination ports from one source in a short window (thresholds far below 1985); do not rely on complete logs. Limitation to state in the README: ufw log is incomplete under heavy scans.
+- Optional check not yet done: `sudo dmesg | grep -i suppress` or `journalctl -k | grep -i suppress` for "callbacks suppressed" messages.
