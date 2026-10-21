@@ -115,3 +115,12 @@ Observations that affect the parser and detectors:
 - Expected: BENIGN: a single normal SSH login as victim from Kali (192.168.214.130) using the correct password (password auth). Expect exactly one 'Accepted password for victim from 192.168.214.130' and no failed-password lines. False-positive check for the SSH brute-force detector.
 - Attack exit code: 0. auth.log lines in window (approx): 47
 - Logs copied to: data/raw/benign_ssh_login_01/ (auth.log, ufw.log, nginx_access.log, attack_output.txt)
+
+## benign_ssh_mistype_then_success_01 (2026-10-21T18:31:05Z UTC)
+- Target: ubuntu-target @ 192.168.214.129 (verified). Kali: kali@192.168.214.130. Logs via adm-group read (no password).
+- Window (target clock, UTC): start=2026-10-21T18:31:05Z end=2026-10-21T18:31:17Z
+- Clock check: target=2026-10-21T18:31:05Z kali=2026-10-21T18:31:05Z
+- Attack (from Kali): `for i in 1 2 3; do SSH_ASKPASS=/tmp/awrong SSH_ASKPASS_REQUIRE=force setsid -w ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o PreferredAuthentications=password -o PubkeyAuthentication=no -o NumberOfPasswordPrompts=1 victim@192.168.214.129 true </dev/null; done; SSH_ASKPASS=/tmp/askpass SSH_ASKPASS_REQUIRE=force setsid -w ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o PreferredAuthentications=password -o PubkeyAuthentication=no victim@192.168.214.129 "echo hi" </dev/null`
+- Expected: BENIGN: a user fumbles the password 3 times then logs in, all from Kali (192.168.214.130). Expect exactly 3 'Failed password for victim' then 1 'Accepted password for victim', same source. Tests the SSH brute-force detector's threshold: a small number of failures followed by success must NOT be flagged as an attack.
+- Attack exit code: 0. auth.log lines in window (approx): 43
+- Logs copied to: data/raw/benign_ssh_mistype_then_success_01/ (auth.log, ufw.log, nginx_access.log, attack_output.txt)
