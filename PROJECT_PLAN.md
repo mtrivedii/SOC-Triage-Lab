@@ -224,7 +224,7 @@ Budgets assume focused hours. Cumulative "core" (Sprints 0-4) is roughly 9-12 ho
 ### Sprint 0: Setup and decisions (about 1 h)
 **Goal:** a clean, safe starting point.
 - [x] Answer the open decisions in Section 2.
-- [ ] Snapshot or clone the Kali VM (so the HTB setup stays safe).
+- [x] Snapshot or clone the Kali VM (so the HTB setup stays safe). Done 2026-10-21: clone made and confirmed working.
 - [x] Create the repo (private for now), add `.gitignore`, `.env.example`, `README` stub, this plan, and `CLAUDE.md`.
 - [x] Create the Python environment with uv on Windows. Pin dependencies via `uv.lock` (`pydantic`, `openai`, `pytest`, `ruff`, `python-dotenv`, `pyyaml`). No LiteLLM.
 - [ ] Add secret scanning (gitleaks pre-commit hook, or at minimum a documented manual check).
@@ -407,7 +407,7 @@ Pick at most one:
 | Date | Sprint | What got done | Cut/deferred | Needed next |
 |------|--------|---------------|--------------|-------------|
 | 2026-10-21 | Planning | Plan written | n/a | Answer Section 2, start Sprint 0 |
-| 2026-10-21 | 0 | Decisions recorded, repo scaffolded (uv, lockfile, smoke test) | Kali snapshot, API keys, model-name check still open | Kali snapshot, two free API keys, then Sprint 1 |
+| 2026-10-21 | 0 | Decisions recorded, repo scaffolded (uv, lockfile, smoke test) | API keys, model-name check, secrets check still open | Two free API keys (Gemini, Groq), hello test, then Sprint 1 |
 |  |  |  |  |  |
 
 **Label changes after seeing results (must be listed here):** none yet.
@@ -424,7 +424,6 @@ Pick at most one:
 - Repo scaffolded: folder layout, `.gitignore`, `.env.example`, README stub, `CLAUDE.md`, `pyproject.toml`, `uv.lock` (hashes included), one smoke test. `uv sync`, `uv run pytest` and `uv run ruff check .` pass.
 
 **Still open in Sprint 0 (needs me, on my laptop):**
-- [ ] Snapshot or clone the Kali VM.
 - [ ] Create two free-tier API keys (Google AI Studio and Groq), put them only in `.env` (`GEMINI_API_KEY`, `GROQ_API_KEY`).
 - [ ] Check the current official model names, rate limits and OpenAI-compatible endpoints for both providers (do not guess; names change). Record them in config. First pass of notes is in `docs/providers.md` (proposed pair: Gemini + Groq `gpt-oss-120b`; unconfirmed until keys exist).
 - [ ] One-line "hello" call to each model: `uv run python scripts/hello.py gemini` (lists models), then `... gemini <model-id>`; same for `groq`.
