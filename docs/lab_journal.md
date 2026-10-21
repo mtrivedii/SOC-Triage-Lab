@@ -84,3 +84,12 @@ Observations that affect the parser and detectors:
 - Expected: SSH brute force against victim; correct password IS present in the wordlist (rockyou line 1384), so it ends in a successful login. Wordlist sliced to ~25 lines ending at 1384 because OpenSSH 10.2p1 PerSourcePenalties blocks the source IP after a few dozen failures (see scenario 1), making a full walk to line 1384 unreachable.
 - Attack exit code: 0. auth.log lines in window (approx): 118
 - Logs copied to: data/raw/ssh_bruteforce_success_01/ (auth.log, ufw.log, nginx_access.log, attack_output.txt)
+
+## port_scan_01 (2026-10-21T17:45:28Z UTC)
+- Target: ubuntu-target @ 192.168.214.129 (verified). Kali: kali@192.168.214.130. Logs via adm-group read (no password).
+- Window (target clock, UTC): start=2026-10-21T17:45:28Z end=2026-10-21T17:47:20Z
+- Clock check: target=2026-10-21T17:45:27Z kali=2026-10-21T17:45:27Z
+- Attack (from Kali): `sudo -n nmap -sS -p- 192.168.214.129`
+- Expected: Full TCP SYN port scan (nmap -sS -p-, all 65535 ports) from Kali against the target. Expect ufw.log to show many distinct blocked destination ports from one source (192.168.214.130); per the earlier calibration, ufw logs only a fraction of scanned ports, so the distinct-port count is reported from this run, not assumed.
+- Attack exit code: 0. auth.log lines in window (approx): 16
+- Logs copied to: data/raw/port_scan_01/ (auth.log, ufw.log, nginx_access.log, attack_output.txt)
