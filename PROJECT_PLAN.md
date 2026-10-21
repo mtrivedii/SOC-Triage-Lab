@@ -227,9 +227,9 @@ Budgets assume focused hours. Cumulative "core" (Sprints 0-4) is roughly 9-12 ho
 - [x] Snapshot or clone the Kali VM (so the HTB setup stays safe). Done 2026-10-21: clone made and confirmed working.
 - [x] Create the repo (private for now), add `.gitignore`, `.env.example`, `README` stub, this plan, and `CLAUDE.md`.
 - [x] Create the Python environment with uv on Windows. Pin dependencies via `uv.lock` (`pydantic`, `openai`, `pytest`, `ruff`, `python-dotenv`, `pyyaml`). No LiteLLM.
-- [ ] Add secret scanning (gitleaks pre-commit hook, or at minimum a documented manual check).
-- [ ] Create API keys for two free-tier providers (Google AI Studio and Groq). Store only in `.env`. Verify with a one-line "hello" call through the `openai` SDK (`scripts/hello.py`).
-- [ ] Check the current official model names for each provider. They change. Do not guess.
+- [x] Add secret scanning (gitleaks pre-commit hook, or at minimum a documented manual check). Done 2026-10-21 as a documented manual check (`docs/providers.md`); gitleaks hook cut.
+- [x] Create API keys for two free-tier providers (Google AI Studio and Groq). Store only in `.env`. Verify with a one-line "hello" call through the `openai` SDK (`scripts/hello.py`). Done 2026-10-21: both answered.
+- [x] Check the current official model names for each provider. They change. Do not guess. Done 2026-10-21 via `models.list()`; pinned in `config/models.toml`.
 
 **Done when:** `pytest` runs (even with 1 dummy test), an `openai` SDK call to each model works, and `git log` shows no secrets.
 **Cut list:** skip the pre-commit hook for now, but run the manual secrets check in Sprint 7.
@@ -408,14 +408,14 @@ Pick at most one:
 |------|--------|---------------|--------------|-------------|
 | 2026-10-21 | Planning | Plan written | n/a | Answer Section 2, start Sprint 0 |
 | 2026-10-21 | 0 | Decisions recorded, repo scaffolded (uv, lockfile, smoke test) | API keys, model-name check, secrets check still open | Two free API keys (Gemini, Groq), hello test, then Sprint 1 |
-|  |  |  |  |  |
+| 2026-10-21 | 0 (done) | uv 0.13.4 on laptop; `pytest` (4) and `ruff` pass; keys in ignored `.env`; models confirmed via `models.list()` + hello call: `gemini-3.8-flash`, `openai/gpt-oss-120b` (`config/models.toml`); manual secrets check clean | gitleaks pre-commit hook (cut list; manual check documented, redo in Sprint 7). Free-tier rate limits not yet recorded (waiting on console numbers) | Rate-limit numbers from AI Studio + Groq console; then Sprint 1: build Ubuntu target VM on host-only network |
 
 **Label changes after seeing results (must be listed here):** none yet.
 ---
 
 ## 11. Current state / handoff (read this when starting a new chat)
 
-**Last updated:** 2026-10-21. **Current sprint:** 0 (setup), partly done.
+**Last updated:** 2026-10-21. **Current sprint:** 0 done (except recording rate limits); next is Sprint 1.
 
 **How to resume in a new chat:** give the assistant `PROJECT_PLAN.md` and `CLAUDE.md` from this repo (`mtrivedii/soc-triage-lab`, private). Then confirm the sprint from the Progress Log and continue.
 
@@ -423,12 +423,15 @@ Pick at most one:
 - Section 2 decisions recorded (uv, plain Python on Windows, free-tier models only, no LiteLLM, private repo, no co-author lines on commits).
 - Repo scaffolded: folder layout, `.gitignore`, `.env.example`, README stub, `CLAUDE.md`, `pyproject.toml`, `uv.lock` (hashes included), one smoke test. `uv sync`, `uv run pytest` and `uv run ruff check .` pass.
 
-**Still open in Sprint 0 (needs me, on my laptop):**
-- [ ] Create two free-tier API keys (Google AI Studio and Groq), put them only in `.env` (`GEMINI_API_KEY`, `GROQ_API_KEY`).
-- [ ] Check the current official model names, rate limits and OpenAI-compatible endpoints for both providers (do not guess; names change). Record them in config. First pass of notes is in `docs/providers.md` (proposed pair: Gemini + Groq `gpt-oss-120b`; unconfirmed until keys exist).
-- [ ] One-line "hello" call to each model: `uv run python scripts/hello.py gemini` (lists models), then `... gemini <model-id>`; same for `groq`.
-- [ ] Secrets check (gitleaks pre-commit hook, or documented manual check).
+- Sprint 0 finished on the laptop (2026-10-21): uv 0.13.4 installed via winget; `uv sync`, `uv run pytest -q` (4 passed) and `uv run ruff check .` pass.
+- Keys `GEMINI_API_KEY` and `GROQ_API_KEY` live only in `.env` (git-ignored, never committed).
+- Endpoints in `config/providers.toml`; pinned models in `config/models.toml`: Gemini `gemini-3.8-flash`, Groq `openai/gpt-oss-120b`. Both answered a `scripts/hello.py` call. Details in `docs/providers.md`.
+- Known quirk: the Gemini test call took over 2 minutes (Groq: under a second). Sprint 3's client needs an explicit timeout and latency logging.
+- Manual secrets check of the full history is clean (documented in `docs/providers.md`). gitleaks hook was cut; redo the check in Sprint 7.
 
-**Next after that:** Sprint 1 (lab and log collection). It needs me to run the VM and attack commands; the assistant only gives commands and expected outcomes.
+**Still open from Sprint 0 (needs me):**
+- [ ] Read free-tier limits for `gemini-3.8-flash` (https://aistudio.google.com/rate-limit) and `openai/gpt-oss-120b` (Groq console limits page) and record them in `docs/providers.md` with the date.
 
-**Quick start:** `uv sync` then `uv run pytest`.
+**Next:** Sprint 1 (lab and log collection). It needs me to build the Ubuntu target VM on a host-only network and run the attack commands from Kali; the assistant only gives commands and expected outcomes.
+
+**Quick start:** `uv sync`, then `uv run pytest -q` and `uv run ruff check .`. Model check: `uv run python scripts/hello.py <gemini|groq> [model-id]`.
