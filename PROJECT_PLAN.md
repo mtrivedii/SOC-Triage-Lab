@@ -412,13 +412,14 @@ Pick at most one:
 | 2026-10-21 | Planning | Plan written | n/a | Answer Section 2, start Sprint 0 |
 | 2026-10-21 | 0 | Decisions recorded, repo scaffolded (uv, lockfile, smoke test) | API keys, model-name check, secrets check still open | Two free API keys (Gemini, Groq), hello test, then Sprint 1 |
 | 2026-10-21 | 0 (done) | uv 0.13.4 on laptop; `pytest` (4) and `ruff` pass; keys in ignored `.env`; models confirmed via `models.list()` + hello call: `gemini-3.8-flash`, `openai/gpt-oss-120b` (`config/models.toml`); manual secrets check clean | gitleaks pre-commit hook (cut list; manual check documented, redo in Sprint 7). Free-tier rate limits not yet recorded (waiting on console numbers) | Rate-limit numbers from AI Studio + Groq console; then Sprint 1: build Ubuntu target VM on host-only network |
+| 2026-10-21 | 1 (logs collected) | `scripts/run_scenario.ps1` written; 9 case slices captured from Kali against the target and committed to `data/raw/` with journal entries: 5 malicious (`ssh_bruteforce_fail_01`, `ssh_bruteforce_success_01`, `port_scan_01`, `web_dir_scan_01`, `mixed_bruteforce_and_browsing_01`) + 4 benign (`benign_ssh_login_01`, `benign_ssh_mistype_then_success_01`, `benign_browsing_01`, `benign_health_monitor_01`) | nikto, 2nd nmap variant, cron/apt-noise case not run (cut list / optional). `port_scan_01` kept as 35 MB full-range; future scans bounded | Sprint 2: write `cases/*.yaml` ground truth (before any AI), then parsers + detectors; two early commit msgs mislabeled (see journal Known issues) |
 
 **Label changes after seeing results (must be listed here):** none yet.
 ---
 
 ## 11. Current state / handoff (read this when starting a new chat)
 
-**Last updated:** 2026-10-21. **Current sprint:** 1 (lab and log collection), just started. Sprint 0 is done except recording the free-tier rate limits.
+**Last updated:** 2026-10-21 (evening). **Current sprint:** 1 log collection is done (9 case slices committed); next is Sprint 2 (ground truth + detectors). Sprint 0 is done except recording the free-tier rate limits.
 
 **How to resume in a new chat:** give the assistant `PROJECT_PLAN.md` and `CLAUDE.md` from this repo (`mtrivedii/soc-triage-lab`, private). Then confirm the sprint from the Progress Log and continue.
 
@@ -439,11 +440,10 @@ Pick at most one:
 - VMware Workstation Pro. Both lab VMs run on a host-only network 192.168.214.0/24 (target `ubuntu-target` 192.168.214.129, lab Kali clone 192.168.214.130, host adapter .1). Target isolation verified (no default route, no internet). Original Kali stays untouched for HTB.
 - Target: Ubuntu Server 26.04.1, ssh/nginx/ufw/rsyslog configured, ufw logging `high`, `/health` page present. All times in UTC; Kali set to UTC. Real log formats and a ufw calibration scan are recorded in `docs/lab_journal.md` (ufw log is incomplete under heavy scans; detectors must not rely on complete logs).
 - **Limitation (scan-log size):** `port_scan_01` is a ~35 MB full-range (`nmap -sS -p-`) capture kept as-is as the one full-range reference; later scan cases use a bounded port range (e.g. `--top-ports 2000` or `-p 1-2000`) to avoid repo bloat, and each such case's journal entry notes it is a bounded scan.
-- SSH key `~/.ssh/lab_ed25519` (no passphrase, lab only, outside the repo) works to `labuser@192.168.214.129` (member of `adm`, can read logs) and `kali@192.168.214.130` (passwordless sudo for nmap only).
-- Snapshots: `clean-base` (target) and `lab-clean` (Kali) are expected to exist; verify before reverting anything.
-- **Working agreement change (user decision):** the assistant may now run scenarios itself via Claude Code on the user's laptop over SSH, only against these two VMs. No other targets, no passwords or keys printed, never the original HTB Kali.
-- **Next:** run scenario 1 (`ssh_bruteforce_fail_01`) with a script (`scripts/run_scenario.*`) that reverts the snapshot, records start/end from the target's clock, runs the attack, copies logs to `data/raw/<case_id>/` and appends a journal entry. Then the remaining scenarios.
-
-**Next:** Sprint 1 (lab and log collection). It needs me to build the Ubuntu target VM on a host-only network and run the attack commands from Kali; the assistant only gives commands and expected outcomes.
+- SSH key `~/.ssh/lab_ed25519` (no passphrase, lab only, outside the repo) works to `labuser@192.168.214.129` (member of `adm`, can read logs) and `kali@192.168.214.130` (passwordless sudo for nmap only, via `/etc/sudoers.d/lab-nmap`).
+- **Snapshots:** `clean-base` on BOTH VMs (there is no `lab-clean`; the Kali snapshot is also named `clean-base`). The target `clean-base` was re-taken to bake in: `labuser` in `adm`, the lab SSH key, and a throwaway `victim` account (uid 1001, weak password = rockyou line 1384) used for the success/benign SSH cases. `run_scenario.ps1` reverts the target to `clean-base` each run. Verify with `vmrun listSnapshots` before reverting.
+- Benign/mixed SSH logins authenticate as `victim` (password-only) from Kali via OpenSSH `SSH_ASKPASS` (no `sshpass` on this Kali); the password is pulled from rockyou line 1384 into `/tmp/vp` on Kali, so it never appears in a command, the journal, or a commit. Helper files on Kali: `/tmp/vp`, `/tmp/askpass`, `/tmp/awrong` (bogus), `/tmp` is wiped on Kali reboot (re-stage if needed).
+- **Working agreement change (user decision, in CLAUDE.md):** the assistant may run the lab scenarios itself via Claude Code over SSH, only against these two VMs (SSH to `labuser@.129` / `kali@.130` with the lab key; attacks only from Kali `.130` against `.129`, IP checked each run). No other targets, no passwords/keys printed, never the original HTB Kali.
+- **Next:** Sprint 2 — write `cases/*.yaml` ground truth for all 9 slices BEFORE involving any AI (§4.4), then parsers (handle `sshd-session[...]`, ISO-8601 µs timestamps, both `::1` and real-IPv4 nginx clients) and detectors. Parser rule already decided: filter each case by its journal window and exclude the analyst IP `192.168.214.1`. Shut both VMs down for the analysis phase.
 
 **Quick start:** `uv sync`, then `uv run pytest -q` and `uv run ruff check .`. Model check: `uv run python scripts/hello.py <gemini|groq> [model-id]`.
