@@ -47,3 +47,8 @@ Observations that affect the parser and detectors:
 **ufw log levels** (from `man ufw` on this system): `low` = blocked packets not matching policy, with rate limiting; `medium` = low plus allowed packets not matching policy, INVALID packets and new connections, all with rate limiting; `high` = medium WITHOUT rate limiting, plus all packets with rate limiting; `full` = high without rate limiting. Risk: at `medium` a `nmap -p-` scan will likely be rate limited, so ufw.log would contain only a small fraction of the scan packets and the port-scan detector would see few distinct ports. Plan: switch to `high` and test with a scan before collecting cases; record how many lines a scan produces.
 
 **Open items:** compare Kali clock and timezone with the target; record ufw.log line samples; record real sshd failed/accepted lines once Kali has connected; confirm what ufw `medium` logging does (docs: `man ufw`).
+
+## Clock check (2026-10-21)
+- Target: `Etc/UTC`. Kali clone: `America/New_York` (EDT, -0400) at first check. UTC time was identical on both (16:17:04 UTC on Kali vs target log times around 16:15 UTC), so the clocks are in sync and only the display timezone differed.
+- Decision: set Kali to UTC (`sudo timedatectl set-timezone UTC`). All journal times and case windows are written in UTC.
+- Open: host-only network has no NTP. Re-compare clocks (`date -u` on both) at the start of each scenario session, since case windows depend on them.
