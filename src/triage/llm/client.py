@@ -10,7 +10,9 @@ from __future__ import annotations
 
 import json
 import os
+import time
 import tomllib
+from dataclasses import dataclass
 from pathlib import Path
 
 from pydantic import ValidationError
@@ -53,6 +55,65 @@ def build_messages(
     ]
 
 
+@dataclass
+class CallResult:
+    """A triage call plus the metrics needed for the run log (plan Sprint 3)."""
+
+    result: TriageResult | InvalidResult
+    raw: str
+    tokens_in: int | None
+    tokens_out: int | None
+    latency_s: float
+    attempts: int
+
+
+def _usage(resp) -> tuple[int | None, int | None]:
+    usage = getattr(resp, "usage", None)
+    if usage is None:
+        return None, None
+    return getattr(usage, "prompt_tokens", None), getattr(usage, "completion_tokens", None)
+
+
+def triage_call(
+    alert: dict,
+    model: str,
+    client,
+    system_prompt: str,
+    allowed_techniques: list[str],
+    temperature: float = 0.0,
+    max_retries: int = 1,
+) -> CallResult:
+    """Call the model, validate, retry once on invalid output, and capture metrics
+    (tokens, latency, attempts, raw response). ``client`` must expose
+    ``chat.completions.create`` like the OpenAI SDK; tests inject a fake.
+    """
+    messages = build_messages(system_prompt, alert, allowed_techniques)
+    raw = ""
+    error = ""
+    attempts = 0
+    tokens_in: int | None = None
+    tokens_out: int | None = None
+    parsed: TriageResult | None = None
+    start = time.perf_counter()
+    for _ in range(max_retries + 1):
+        attempts += 1
+        resp = client.chat.completions.create(
+            model=model, messages=messages, temperature=temperature
+        )
+        raw = resp.choices[0].message.content or ""
+        tokens_in, tokens_out = _usage(resp)
+        try:
+            parsed = parse_triage(raw)
+            break
+        except (ValidationError, ValueError) as exc:
+            error = str(exc)
+    latency = time.perf_counter() - start
+    result: TriageResult | InvalidResult = (
+        parsed if parsed is not None else InvalidResult(raw=raw, error=error, attempts=attempts)
+    )
+    return CallResult(result, raw, tokens_in, tokens_out, latency, attempts)
+
+
 def triage(
     alert: dict,
     model: str,
@@ -62,25 +123,10 @@ def triage(
     temperature: float = 0.0,
     max_retries: int = 1,
 ) -> TriageResult | InvalidResult:
-    """Call the model and validate its output. Retries once on invalid output, then
-    returns InvalidResult. ``client`` must expose ``chat.completions.create`` like the
-    OpenAI SDK; tests inject a fake.
-    """
-    messages = build_messages(system_prompt, alert, allowed_techniques)
-    raw = ""
-    error = ""
-    attempts = 0
-    for _ in range(max_retries + 1):
-        attempts += 1
-        resp = client.chat.completions.create(
-            model=model, messages=messages, temperature=temperature
-        )
-        raw = resp.choices[0].message.content or ""
-        try:
-            return parse_triage(raw)
-        except (ValidationError, ValueError) as exc:
-            error = str(exc)
-    return InvalidResult(raw=raw, error=error, attempts=attempts)
+    """Thin wrapper returning just the validated result (or InvalidResult)."""
+    return triage_call(
+        alert, model, client, system_prompt, allowed_techniques, temperature, max_retries
+    ).result
 
 
 def make_client(provider: str):  # pragma: no cover - live use only

@@ -1,0 +1,11 @@
+# USD per 1,000,000 tokens, used only to estimate an "as if paid" cost per run.
+# Free-tier usage is $0. To estimate a paid-equivalent cost, fill the real rates from
+# each provider's pricing page and set `checked` to the date. Left at 0.0, cost records
+# as 0.0. Numbers here are config, not measured results.
+checked = "unset (fill from provider pricing pages)"
+
+[gemini]
+"gemini-3.8-flash" = { input_per_1m = 0.0, output_per_1m = 0.0 }
+
+[groq]
+"openai/gpt-oss-120b" = { input_per_1m = 0.0, output_per_1m = 0.0 }

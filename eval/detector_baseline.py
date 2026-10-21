@@ -16,48 +16,16 @@ from pathlib import Path
 
 import yaml
 
-from triage.detectors import port_scan, ssh_bruteforce, web_scan
-from triage.parsers import auth_log, nginx, ufw
+from triage.pipeline import DEFAULT_MGMT_IP, RULE_TO_ATTACK, alerts_for_case
 
 ROOT = Path(__file__).resolve().parent.parent
-MGMT_IP = "192.168.214.1"
-
-# log filename -> (parser module, detector module)
-DISPATCH = {
-    "auth.log": (auth_log, ssh_bruteforce),
-    "ufw.log": (ufw, port_scan),
-    "nginx_access.log": (nginx, web_scan),
-}
-
-
-def _ts_of(event) -> datetime | None:
-    return getattr(event, "ts", None)
-
-
-def _in_window(event, start: datetime, end: datetime) -> bool:
-    ts = _ts_of(event)
-    return ts is not None and start <= ts <= end
+MGMT_IP = DEFAULT_MGMT_IP
 
 
 def run_case(case: dict) -> dict:
-    start = datetime.fromisoformat(case["window"]["start"])
-    end = datetime.fromisoformat(case["window"]["end"])
-    alerts = []
-    for rel in case["log_files"]:
-        name = Path(rel).name
-        if name not in DISPATCH:
-            continue
-        parser, detector = DISPATCH[name]
-        events = [e for e in parser.parse_file(ROOT / rel) if _in_window(e, start, end)]
-        alerts.extend(
-            detector.detect(events, case_id=case["case_id"], exclude_ips={MGMT_IP})
-        )
-
+    alerts = alerts_for_case(case, ROOT)
     detected_types = sorted({a.rule_id for a in alerts})
-    attack_types = sorted(
-        {m[1].ATTACK_TYPE for name, m in DISPATCH.items()
-         for a in alerts if a.rule_id == m[1].RULE_ID}
-    )
+    attack_types = sorted({RULE_TO_ATTACK[a.rule_id] for a in alerts})
     expected = case["expected"]
     fired = bool(alerts)
     is_malicious = expected["verdict"] == "malicious"

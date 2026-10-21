@@ -3,7 +3,7 @@
 import json
 import types
 
-from triage.llm.client import build_messages, triage
+from triage.llm.client import build_messages, triage, triage_call
 from triage.llm.schema import InvalidResult, TriageResult
 
 VALID = json.dumps({
@@ -66,6 +66,33 @@ def test_invalid_twice_returns_invalid_result():
     assert isinstance(result, InvalidResult)
     assert result.attempts == 2
     assert result.raw == "{still bad"
+
+
+def fake_client_with_usage(content, prompt_tokens, completion_tokens):
+    def create(**kwargs):
+        msg = types.SimpleNamespace(content=content)
+        usage = types.SimpleNamespace(
+            prompt_tokens=prompt_tokens, completion_tokens=completion_tokens
+        )
+        return types.SimpleNamespace(choices=[types.SimpleNamespace(message=msg)], usage=usage)
+
+    return types.SimpleNamespace(
+        chat=types.SimpleNamespace(completions=types.SimpleNamespace(create=create))
+    )
+
+
+def test_triage_call_captures_tokens_and_latency():
+    client = fake_client_with_usage(VALID, 120, 40)
+    call = triage_call(ALERT, "test-model", client, "system prompt", ["T1110"])
+    assert isinstance(call.result, TriageResult)
+    assert call.tokens_in == 120 and call.tokens_out == 40
+    assert call.attempts == 1
+    assert call.latency_s >= 0.0
+
+
+def test_triage_call_usage_none_when_absent():
+    call = triage_call(ALERT, "test-model", fake_client([VALID]), "sys", ["T1110"])
+    assert call.tokens_in is None and call.tokens_out is None
 
 
 def test_build_messages_wraps_evidence_and_keeps_facts_trusted():
