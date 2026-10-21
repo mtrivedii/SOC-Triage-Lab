@@ -124,3 +124,12 @@ Observations that affect the parser and detectors:
 - Expected: BENIGN: a user fumbles the password 3 times then logs in, all from Kali (192.168.214.130). Expect exactly 3 'Failed password for victim' then 1 'Accepted password for victim', same source. Tests the SSH brute-force detector's threshold: a small number of failures followed by success must NOT be flagged as an attack.
 - Attack exit code: 0. auth.log lines in window (approx): 43
 - Logs copied to: data/raw/benign_ssh_mistype_then_success_01/ (auth.log, ufw.log, nginx_access.log, attack_output.txt)
+
+## benign_browsing_01 (2026-10-21T18:32:41Z UTC)
+- Target: ubuntu-target @ 192.168.214.129 (verified). Kali: kali@192.168.214.130. Logs via adm-group read (no password).
+- Window (target clock, UTC): start=2026-10-21T18:32:41Z end=2026-10-21T18:32:47Z
+- Clock check: target=2026-10-21T18:32:40Z kali=2026-10-21T18:32:40Z
+- Attack (from Kali): `for i in 1 2 3 4 5; do curl -s -o /dev/null -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0 Safari/537.36" http://192.168.214.129/; sleep 1; done; curl -s -o /dev/null -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64)" http://192.168.214.129/health`
+- Expected: BENIGN: normal web browsing from Kali (192.168.214.130): a few GETs to / and /health with a real browser User-Agent, all expected 200/304, no 404 sweep. Tests the web-scan detector: low request count, served paths only, non-scanner UA must NOT be flagged as a directory scan.
+- Attack exit code: 0. auth.log lines in window (approx): 17
+- Logs copied to: data/raw/benign_browsing_01/ (auth.log, ufw.log, nginx_access.log, attack_output.txt)
