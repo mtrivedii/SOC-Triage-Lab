@@ -64,7 +64,7 @@ Project plan and working brief. Give this whole file to the assistant at the sta
 Additional decisions (2026-10-21):
 - **No LiteLLM.** Its PyPI releases 1.82.7 and 1.82.8 were malicious (March 2026 supply-chain attack). Use the official `openai` SDK with each provider's OpenAI-compatible endpoint and a small price table instead.
 - **Git commits carry no co-author or Claude attribution line.**
-- **Last-resort fallback:** my own Claude API key, only if the free tiers can't do the job (for example Groq's daily token cap blocks the evaluation). It is paid, so set a spend cap, log the cost per run, and pin the exact model like any other. Adding it means a new provider entry in `config/providers.toml`; check Anthropic's current docs for the endpoint and structured-output support first.
+- **Last-resort fallback:** a Claude API key (needs a Claude Console account with its own prepaid credit; my Claude Pro subscription does not cover API usage, per Anthropic's help page; no key exists yet), only if the free tiers can't do the job (for example Groq's daily token cap blocks the evaluation). It is paid, so set a spend cap, log the cost per run, and pin the exact model like any other. Adding it means a new provider entry in `config/providers.toml`; check Anthropic's current docs for the endpoint and structured-output support first.
 - Code is written and pushed to `mtrivedii/soc-triage-lab`; real model calls and anything touching the lab run on my laptop.
 
 ---

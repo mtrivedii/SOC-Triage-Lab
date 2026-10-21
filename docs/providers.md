@@ -14,7 +14,7 @@ Checked 2026-10-21 against official docs. Limits and model names change; re-chec
 User has no model preference, so the assistant chose Gemini + Groq `openai/gpt-oss-120b` (two different model families, both free, no card). Mistral stays as backup.
 
 ## Fallback
-User's own Claude API key, last resort only (paid, not free). Not configured. Check Anthropic's docs before adding it.
+Claude API, last resort only (paid, not free). Needs a Console account and prepaid credit: the user's Claude Pro plan does not include API usage (https://support.claude.com/en/articles/9876003-i-subscribe-to-claude-pro-why-do-i-have-to-pay-separately-for-api-usage-on-console). No key exists yet. Not configured. Check Anthropic's docs before adding it.
 
 ## Status
 - Nothing here has been tested with a real key yet. Model IDs below the "Models" heading must be confirmed with `client.models.list()` once keys exist; do not hard-code from this file.
