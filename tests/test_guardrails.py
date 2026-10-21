@@ -104,6 +104,25 @@ def test_wrong_count_in_summary_is_ungrounded_regression():
     assert not rep.passed
 
 
+def test_window_timestamps_are_grounded_only_wrong_count_flagged():
+    # Summary correctly quotes the window (from trusted first_seen/last_seen) but gets the
+    # count wrong. Only "27" should be ungrounded, not the timestamp digits.
+    alert = _alert(
+        counts={"failed": 28, "accepted": 1},
+        first_seen="2026-10-21T17:36:52+00:00",
+        last_seen="2026-10-21T17:37:15+00:00",
+    )
+    result = _result(
+        summary=(
+            "Between 17:36:52 and 17:37:15 UTC there were 27 failed SSH logins "
+            "from 192.168.214.130 before a successful login."
+        ),
+    )
+    rep = guardrails.check(result, alert, ALLOWLIST)
+    assert rep.ungrounded_numbers == ["27"]
+    assert not rep.passed
+
+
 def test_correct_count_in_summary_is_grounded():
     # The matching positive: the true count 28 grounds cleanly.
     alert = _alert(counts={"failed": 28, "accepted": 1}, usernames_seen=["victim"])

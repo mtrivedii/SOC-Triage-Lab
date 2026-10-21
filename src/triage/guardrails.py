@@ -19,6 +19,8 @@ from triage.llm.schema import TriageResult, Verdict
 
 _IP = re.compile(r"\b\d{1,3}(?:\.\d{1,3}){3}\b")
 _NUM = re.compile(r"\b\d+\b")
+# No word boundary: catches digit runs glued to letters, e.g. the "17" in "...21T17:36".
+_DIGITS = re.compile(r"\d+")
 _SEVERITY_RANK = {"low": 0, "medium": 1, "high": 2, "critical": 3}
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -58,10 +60,11 @@ def _alert_text(alert: Alert) -> str:
 
 
 def _trusted_numbers(alert: Alert) -> set[str]:
-    """Whole-token numbers from the TRUSTED structured fields only. Evidence lines are
-    deliberately excluded: their raw timestamps and ports contain so many digit runs that
-    almost any 1-3 digit number would ground by coincidence (how a wrong count like 27
-    slipped past). first_seen/last_seen are also excluded for the same reason.
+    """Whole-token numbers from the TRUSTED structured fields only. ``evidence_lines`` are
+    deliberately excluded: they are untrusted raw log text whose many timestamps and ports
+    let almost any 1-3 digit number ground by coincidence (how a wrong count like 27 slipped
+    past). ``first_seen``/``last_seen`` ARE trusted alert fields (same tier as src_ip/counts),
+    so the window's own timestamp digits count as grounded.
     """
     numbers: set[str] = set()
     for value in alert.counts.values():
@@ -69,8 +72,15 @@ def _trusted_numbers(alert: Alert) -> set[str]:
             continue
         if isinstance(value, int):
             numbers.add(str(value))
-    for text in [alert.src_ip or "", alert.target_host or "", *alert.usernames_seen]:
-        numbers.update(_NUM.findall(text))
+    trusted_text = [
+        alert.src_ip or "",
+        alert.target_host or "",
+        alert.first_seen or "",
+        alert.last_seen or "",
+        *alert.usernames_seen,
+    ]
+    for text in trusted_text:
+        numbers.update(_DIGITS.findall(text))
     return numbers
 
 
