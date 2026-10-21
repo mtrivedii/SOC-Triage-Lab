@@ -1,0 +1,9 @@
+# Pinned model IDs. Each was seen in the provider's models.list() and answered a
+# test call via scripts/hello.py on the date below. Re-check before evaluation runs.
+[gemini]
+model = "gemini-3.8-flash"
+confirmed = 2026-10-21
+
+[groq]
+model = "openai/gpt-oss-120b"
+confirmed = 2026-10-21
