@@ -102,3 +102,7 @@ Observations that affect the parser and detectors:
 - Expected: Web directory/wordlist scan with gobuster (dirb common.txt, 20 threads) from Kali against nginx on the target. Expect many HTTP requests from 192.168.214.130 in nginx access.log, mostly 404s, with a few hits for whatever nginx actually serves (e.g. / and /health). Maps to T1595.003 (Wordlist Scanning).
 - Attack exit code: 0. auth.log lines in window (approx): 24
 - Logs copied to: data/raw/web_dir_scan_01/ (auth.log, ufw.log, nginx_access.log, attack_output.txt)
+
+## Known issues
+- **Early commit-message mismatches (data is correct and verified, history left as-is):** `5b4106e` is titled "Refactor code structure..." but contains `ssh_bruteforce_fail_01`'s data; `31656c0` is titled "Add ssh_bruteforce_fail_01 case logs" but its diff contains `ssh_bruteforce_success_01`'s files. Not rewritten (avoiding repeated force-pushes). The case logs themselves are verified correct.
+- **Large raw ufw.log for full-range scans:** `port_scan_01/ufw.log` is ~35 MB / 132k lines. Trimming to the case window removes only ~0.9% (1,231 of 132,373 lines) because the scan traffic is itself in-window. Real size reduction needs a different lever (git-LFS, a capped port range, or dedup-by-destination-port) — under discussion before more scan cases.
