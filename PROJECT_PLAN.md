@@ -438,6 +438,7 @@ Pick at most one:
 **Sprint 1 state (2026-10-21, evening):**
 - VMware Workstation Pro. Both lab VMs run on a host-only network 192.168.214.0/24 (target `ubuntu-target` 192.168.214.129, lab Kali clone 192.168.214.130, host adapter .1). Target isolation verified (no default route, no internet). Original Kali stays untouched for HTB.
 - Target: Ubuntu Server 26.04.1, ssh/nginx/ufw/rsyslog configured, ufw logging `high`, `/health` page present. All times in UTC; Kali set to UTC. Real log formats and a ufw calibration scan are recorded in `docs/lab_journal.md` (ufw log is incomplete under heavy scans; detectors must not rely on complete logs).
+- **Limitation (scan-log size):** `port_scan_01` is a ~35 MB full-range (`nmap -sS -p-`) capture kept as-is as the one full-range reference; later scan cases use a bounded port range (e.g. `--top-ports 2000` or `-p 1-2000`) to avoid repo bloat, and each such case's journal entry notes it is a bounded scan.
 - SSH key `~/.ssh/lab_ed25519` (no passphrase, lab only, outside the repo) works to `labuser@192.168.214.129` (member of `adm`, can read logs) and `kali@192.168.214.130` (passwordless sudo for nmap only).
 - Snapshots: `clean-base` (target) and `lab-clean` (Kali) are expected to exist; verify before reverting anything.
 - **Working agreement change (user decision):** the assistant may now run scenarios itself via Claude Code on the user's laptop over SSH, only against these two VMs. No other targets, no passwords or keys printed, never the original HTB Kali.
