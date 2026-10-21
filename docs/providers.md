@@ -16,9 +16,23 @@ User has no model preference, so the assistant chose Gemini + Groq `openai/gpt-o
 ## Fallback
 Claude API, last resort only (paid, not free). Needs a Console account and prepaid credit: the user's Claude Pro plan does not include API usage (https://support.claude.com/en/articles/9876003-i-subscribe-to-claude-pro-why-do-i-have-to-pay-separately-for-api-usage-on-console). No key exists yet. Not configured. Check Anthropic's docs before adding it.
 
-## Status
-- Nothing here has been tested with a real key yet. Model IDs below the "Models" heading must be confirmed with `client.models.list()` once keys exist; do not hard-code from this file.
-- Models seen in docs (unconfirmed): Gemini `gemini-3.8-flash` (docs example), Groq `openai/gpt-oss-120b`.
+## Models (confirmed 2026-10-21)
+Pinned in `config/models.toml`. Both IDs appeared in `client.models.list()` and answered a `scripts/hello.py` test call ("ok").
+
+| Provider | Model ID | Why this one | Test call notes |
+|----------|----------|--------------|-----------------|
+| Gemini | `gemini-3.8-flash` | Newest Flash-class ID with no `preview`/`exp`/`latest` tag. `gemini-flash-latest` skipped: it is an alias, not a pin. | Took over 2 minutes to answer; usage reported `completion_tokens=0`, `total_tokens=102` (thinking tokens not itemised). Sprint 3 needs an explicit client timeout and latency logging. |
+| Groq | `openai/gpt-oss-120b` | Planned choice, present in the list. | Answered in about 0.1 s of model time; usage 78 in / 32 out (22 reasoning). |
+
+## Free-tier rate limits
+Not recorded yet: waiting for the user to read them from AI Studio (https://aistudio.google.com/rate-limit) and the Groq console. Do not fill these in from memory or docs.
+
+## Secrets check (manual, 2026-10-21)
+Done instead of a gitleaks hook (Sprint 0 cut list). Re-run in Sprint 7 before going public.
+- `git log --all --full-history -- .env`: no commits. `.env` was never committed; `git check-ignore -v .env` shows it ignored by `.gitignore:2`.
+- Every commit's patch (`git show` over `git rev-list --all`, 5 commits at the time) grepped for `AIza…`, `gsk_…` and `sk-ant-…` key patterns: no hits. Plain `AIza`/`gsk_` in `git log -p --all`: 0 matches.
+- Tracked and untracked working-tree files (excluding `.env`) grepped for the same patterns: no hits.
+- `.env.example` values are empty (also enforced by `tests/test_config.py`).
 
 ## Sources
 - https://ai.google.dev/gemini-api/docs/rate-limits
