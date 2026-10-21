@@ -425,7 +425,7 @@ Pick at most one:
 **Still open in Sprint 0 (needs me, on my laptop):**
 - [ ] Snapshot or clone the Kali VM.
 - [ ] Create two free-tier API keys (Google AI Studio plus one more provider), put them only in `.env`.
-- [ ] Check the current official model names, rate limits and OpenAI-compatible endpoints for both providers (do not guess; names change). Record them in config.
+- [ ] Check the current official model names, rate limits and OpenAI-compatible endpoints for both providers (do not guess; names change). Record them in config. First pass of notes is in `docs/providers.md` (proposed pair: Gemini + Groq `gpt-oss-120b`; unconfirmed until keys exist).
 - [ ] One-line "hello" call to each model through the `openai` SDK.
 - [ ] Secrets check (gitleaks pre-commit hook, or documented manual check).
 
