@@ -75,3 +75,12 @@ Observations that affect the parser and detectors:
 - Expected: SSH brute force, failures only - correct password NOT in the 50-word list, so all attempts fail
 - Attack exit code: 255. auth.log lines in window (approx): 176
 - Logs copied to: data/raw/ssh_bruteforce_fail_01/ (auth.log, ufw.log, nginx_access.log, attack_output.txt)
+
+## ssh_bruteforce_success_01 (2026-10-21T17:36:47Z UTC)
+- Target: ubuntu-target @ 192.168.214.129 (verified). Kali: kali@192.168.214.130. Logs via adm-group read (no password).
+- Window (target clock, UTC): start=2026-10-21T17:36:47Z end=2026-10-21T17:37:17Z
+- Clock check: target=2026-10-21T17:36:46Z kali=2026-10-21T17:36:46Z
+- Attack (from Kali): `sed -n "1360,1384p" /usr/share/wordlists/rockyou.txt > /tmp/wl.txt; hydra -l victim -P /tmp/wl.txt -t 4 -I -o /tmp/hydra_out.txt ssh://192.168.214.129`
+- Expected: SSH brute force against victim; correct password IS present in the wordlist (rockyou line 1384), so it ends in a successful login. Wordlist sliced to ~25 lines ending at 1384 because OpenSSH 10.2p1 PerSourcePenalties blocks the source IP after a few dozen failures (see scenario 1), making a full walk to line 1384 unreachable.
+- Attack exit code: 0. auth.log lines in window (approx): 118
+- Logs copied to: data/raw/ssh_bruteforce_success_01/ (auth.log, ufw.log, nginx_access.log, attack_output.txt)
