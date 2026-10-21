@@ -435,10 +435,13 @@ Pick at most one:
 **Still open from Sprint 0 (needs me):**
 - [ ] Read free-tier limits for `gemini-3.8-flash` (https://aistudio.google.com/rate-limit) and `openai/gpt-oss-120b` (Groq console limits page) and record them in `docs/providers.md` with the date.
 
-**Sprint 1 state (2026-10-21):**
-- VMware Workstation Pro. Lab Kali = clone of the original (updated and upgraded); original Kali stays for HTB.
-- Ubuntu Server 26.04.1 LTS target VM is installed and running (NAT adapter for now). Nothing else configured on it yet.
-- **Next step (user, on waking):** Phase A on the target, checklist in `docs/lab_journal.md`. Then paste the output of the "check logs and clock" step so the assistant can record real log formats. Then Phase B: switch both VMs to host-only, verify isolation, snapshot `clean-base`, then generate scenarios.
+**Sprint 1 state (2026-10-21, evening):**
+- VMware Workstation Pro. Both lab VMs run on a host-only network 192.168.214.0/24 (target `ubuntu-target` 192.168.214.129, lab Kali clone 192.168.214.130, host adapter .1). Target isolation verified (no default route, no internet). Original Kali stays untouched for HTB.
+- Target: Ubuntu Server 26.04.1, ssh/nginx/ufw/rsyslog configured, ufw logging `high`, `/health` page present. All times in UTC; Kali set to UTC. Real log formats and a ufw calibration scan are recorded in `docs/lab_journal.md` (ufw log is incomplete under heavy scans; detectors must not rely on complete logs).
+- SSH key `~/.ssh/lab_ed25519` (no passphrase, lab only, outside the repo) works to `labuser@192.168.214.129` (member of `adm`, can read logs) and `kali@192.168.214.130` (passwordless sudo for nmap only).
+- Snapshots: `clean-base` (target) and `lab-clean` (Kali) are expected to exist; verify before reverting anything.
+- **Working agreement change (user decision):** the assistant may now run scenarios itself via Claude Code on the user's laptop over SSH, only against these two VMs. No other targets, no passwords or keys printed, never the original HTB Kali.
+- **Next:** run scenario 1 (`ssh_bruteforce_fail_01`) with a script (`scripts/run_scenario.*`) that reverts the snapshot, records start/end from the target's clock, runs the attack, copies logs to `data/raw/<case_id>/` and appends a journal entry. Then the remaining scenarios.
 
 **Next:** Sprint 1 (lab and log collection). It needs me to build the Ubuntu target VM on a host-only network and run the attack commands from Kali; the assistant only gives commands and expected outcomes.
 
