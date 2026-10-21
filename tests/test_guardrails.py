@@ -123,6 +123,21 @@ def test_window_timestamps_are_grounded_only_wrong_count_flagged():
     assert not rep.passed
 
 
+def test_thousands_separator_count_is_grounded():
+    # Real Gemini output on port_scan_01: "65,531 distinct" is the exact trusted count
+    # (counts.distinct_ports == 65531) written with a thousands separator. It must not be
+    # split into 65 and 531 and flagged.
+    alert = _alert(counts={"distinct_ports": 65531}, rule_id="port_scan")
+    result = _result(
+        attack_type="port_scan",
+        attack_techniques=["T1046"],
+        summary="The scan touched 65,531 distinct ports on 192.168.214.130.",
+    )
+    rep = guardrails.check(result, alert, {**ALLOWLIST, "T1046": "Network Service Discovery"})
+    assert "65531" not in rep.ungrounded_numbers
+    assert rep.ungrounded_numbers == []
+
+
 def test_correct_count_in_summary_is_grounded():
     # The matching positive: the true count 28 grounds cleanly.
     alert = _alert(counts={"failed": 28, "accepted": 1}, usernames_seen=["victim"])

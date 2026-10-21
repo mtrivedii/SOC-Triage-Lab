@@ -18,7 +18,8 @@ from triage.alert import Alert
 from triage.llm.schema import TriageResult, Verdict
 
 _IP = re.compile(r"\b\d{1,3}(?:\.\d{1,3}){3}\b")
-_NUM = re.compile(r"\b\d+\b")
+# Summary numbers, allowing thousands separators: "65,531" is one token, normalised to "65531".
+_SUMMARY_NUM = re.compile(r"\b\d+(?:,\d{3})*\b")
 # No word boundary: catches digit runs glued to letters, e.g. the "17" in "...21T17:36".
 _DIGITS = re.compile(r"\d+")
 _SEVERITY_RANK = {"low": 0, "medium": 1, "high": 2, "critical": 3}
@@ -96,9 +97,9 @@ def check(result: TriageResult, alert: Alert, allowlist: dict[str, str]) -> Guar
     ungrounded_ips = sorted({ip for ip in _IP.findall(result.summary) if ip not in text})
 
     grounded_numbers = _trusted_numbers(alert)
-    ungrounded_numbers = sorted(
-        {n for n in _NUM.findall(result.summary) if n not in grounded_numbers}
-    )
+    # Normalise thousands separators so "65,531" == trusted "65531".
+    summary_numbers = {m.replace(",", "") for m in _SUMMARY_NUM.findall(result.summary)}
+    ungrounded_numbers = sorted(n for n in summary_numbers if n not in grounded_numbers)
 
     floor = alert.severity_floor
     disagrees = (
