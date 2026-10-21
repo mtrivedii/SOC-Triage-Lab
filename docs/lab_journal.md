@@ -133,3 +133,12 @@ Observations that affect the parser and detectors:
 - Expected: BENIGN: normal web browsing from Kali (192.168.214.130): a few GETs to / and /health with a real browser User-Agent, all expected 200/304, no 404 sweep. Tests the web-scan detector: low request count, served paths only, non-scanner UA must NOT be flagged as a directory scan.
 - Attack exit code: 0. auth.log lines in window (approx): 17
 - Logs copied to: data/raw/benign_browsing_01/ (auth.log, ufw.log, nginx_access.log, attack_output.txt)
+
+## benign_health_monitor_01 (2026-10-21T18:33:51Z UTC)
+- Target: ubuntu-target @ 192.168.214.129 (verified). Kali: kali@192.168.214.130. Logs via adm-group read (no password).
+- Window (target clock, UTC): start=2026-10-21T18:33:51Z end=2026-10-21T18:34:53Z
+- Clock check: target=2026-10-21T18:33:50Z kali=2026-10-21T18:33:51Z
+- Attack (from Kali): `for i in $(seq 1 20); do curl -s -o /dev/null -A "HealthMonitor/1.0" http://192.168.214.129/health; sleep 3; done`
+- Expected: BENIGN false-positive TRAP: a monitoring loop polling /health from Kali (192.168.214.130) ~20 times, 3s apart, UA 'HealthMonitor/1.0'. Expect ~20 GETs to /health, all 200, one repeated path. Web-scan detector keys on many DISTINCT paths / 404s, so this must NOT alarm - but a naive volume-only rule would false-positive here. This case defines that boundary.
+- Attack exit code: 0. auth.log lines in window (approx): 32
+- Logs copied to: data/raw/benign_health_monitor_01/ (auth.log, ufw.log, nginx_access.log, attack_output.txt)

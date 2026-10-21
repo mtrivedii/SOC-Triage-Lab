@@ -1,0 +1,263 @@
+2026-10-21T15:56:00.622213+00:00 ubuntu-target passwd[1241]: password for 'labuser' changed by 'root'
+2026-10-21T15:56:00.634165+00:00 ubuntu-target systemd-logind[1279]: New seat seat0.
+2026-10-21T15:56:00.634200+00:00 ubuntu-target systemd-logind[1279]: Watching system buttons on /dev/input/event0 (Power Button)
+2026-10-21T15:56:00.634204+00:00 ubuntu-target systemd-logind[1279]: Watching system buttons on /dev/input/event1 (AT Translated Set 2 keyboard)
+2026-10-21T15:56:00.634211+00:00 ubuntu-target sshd[1307]: Server listening on 0.0.0.0 port 22.
+2026-10-21T15:56:00.634213+00:00 ubuntu-target sshd[1307]: Server listening on :: port 22.
+2026-10-21T15:58:22.584626+00:00 ubuntu-target login: pam_unix(login:auth): check pass; user unknown
+2026-10-21T15:58:22.585217+00:00 ubuntu-target login: pam_unix(login:auth): authentication failure; logname= uid=0 euid=0 tty=/dev/tty1 ruser= rhost= 
+2026-10-21T15:58:25.287805+00:00 ubuntu-target login: FAILED LOGIN 1 FROM tty1 FOR  , Authentication failure
+2026-10-21T15:58:36.266733+00:00 ubuntu-target login: pam_unix(login:session): session opened for user labuser(uid=1000) by labuser(uid=0)
+2026-10-21T15:58:36.311453+00:00 ubuntu-target systemd-logind[1279]: New session '1' of user 'labuser' with class 'user' and type 'tty'.
+2026-10-21T15:58:36.410695+00:00 ubuntu-target (systemd): pam_unix(systemd-user:session): session opened for user labuser(uid=1000) by labuser(uid=0)
+2026-10-21T15:58:36.412269+00:00 ubuntu-target systemd-logind[1279]: New session '2' of user 'labuser' with class 'manager' and type 'unspecified'.
+2026-10-21T16:10:52.532817+00:00 ubuntu-target sshd-session[1889]: Accepted password for labuser from 192.168.100.1 port 50537 ssh2
+2026-10-21T16:10:52.533911+00:00 ubuntu-target sshd-session[1889]: pam_unix(sshd:session): session opened for user labuser(uid=1000) by labuser(uid=0)
+2026-10-21T16:10:52.538666+00:00 ubuntu-target systemd-logind[1279]: New session '3' of user 'labuser' with class 'user' and type 'tty'.
+2026-10-21T16:11:09.948693+00:00 ubuntu-target sudo: pam_unix(sudo:session): session opened for user root(uid=0) by labuser(uid=1000)
+2026-10-21T16:11:09.950573+00:00 ubuntu-target sudo: labuser : TTY=/dev/pts/0 ; PWD=/home/labuser ; USER=root ; COMMAND=/usr/bin/apt update
+2026-10-21T16:11:14.064898+00:00 ubuntu-target sudo: pam_unix(sudo:session): session closed for user root
+2026-10-21T16:11:14.085590+00:00 ubuntu-target sudo: pam_unix(sudo:session): session opened for user root(uid=0) by labuser(uid=1000)
+2026-10-21T16:11:14.087609+00:00 ubuntu-target sudo: labuser : TTY=/dev/pts/0 ; PWD=/home/labuser ; USER=root ; COMMAND=/usr/bin/apt full-upgrade -y
+2026-10-21T16:12:35.193660+00:00 ubuntu-target sshd[1307]: Received signal 15; terminating.
+2026-10-21T16:12:35.273328+00:00 ubuntu-target sshd[9498]: Server listening on 0.0.0.0 port 22.
+2026-10-21T16:12:35.273514+00:00 ubuntu-target sshd[9498]: Server listening on :: port 22.
+2026-10-21T16:12:36.984525+00:00 ubuntu-target sudo: pam_unix(sudo:session): session closed for user root
+2026-10-21T16:12:37.004732+00:00 ubuntu-target sudo: pam_unix(sudo:session): session opened for user root(uid=0) by labuser(uid=1000)
+2026-10-21T16:12:37.004923+00:00 ubuntu-target sudo: labuser : TTY=/dev/pts/0 ; PWD=/home/labuser ; USER=root ; COMMAND=/usr/bin/apt install -y nginx ufw rsyslog
+2026-10-21T16:12:43.944168+00:00 ubuntu-target sudo: pam_unix(sudo:session): session closed for user root
+2026-10-21T16:12:43.966630+00:00 ubuntu-target sudo: pam_unix(sudo:session): session opened for user root(uid=0) by labuser(uid=1000)
+2026-10-21T16:12:43.966732+00:00 ubuntu-target sudo: labuser : TTY=/dev/pts/0 ; PWD=/home/labuser ; USER=root ; COMMAND=/usr/bin/systemctl enable --now ssh nginx rsyslog
+2026-10-21T16:12:45.996953+00:00 ubuntu-target sudo: pam_unix(sudo:session): session closed for user root
+2026-10-21T16:12:56.271590+00:00 ubuntu-target sudo: pam_unix(sudo:session): session opened for user root(uid=0) by labuser(uid=1000)
+2026-10-21T16:12:56.271842+00:00 ubuntu-target sudo: labuser : TTY=/dev/pts/0 ; PWD=/home/labuser ; USER=root ; COMMAND=/usr/sbin/ufw default deny incoming
+2026-10-21T16:12:56.355634+00:00 ubuntu-target sudo: pam_unix(sudo:session): session closed for user root
+2026-10-21T16:12:56.375050+00:00 ubuntu-target sudo: pam_unix(sudo:session): session opened for user root(uid=0) by labuser(uid=1000)
+2026-10-21T16:12:56.375341+00:00 ubuntu-target sudo: labuser : TTY=/dev/pts/0 ; PWD=/home/labuser ; USER=root ; COMMAND=/usr/sbin/ufw default allow outgoing
+2026-10-21T16:12:56.448573+00:00 ubuntu-target sudo: pam_unix(sudo:session): session closed for user root
+2026-10-21T16:12:56.471657+00:00 ubuntu-target sudo: pam_unix(sudo:session): session opened for user root(uid=0) by labuser(uid=1000)
+2026-10-21T16:12:56.472046+00:00 ubuntu-target sudo: labuser : TTY=/dev/pts/0 ; PWD=/home/labuser ; USER=root ; COMMAND=/usr/sbin/ufw allow 22/tcp
+2026-10-21T16:12:56.736175+00:00 ubuntu-target sudo: pam_unix(sudo:session): session closed for user root
+2026-10-21T16:12:56.762645+00:00 ubuntu-target sudo: pam_unix(sudo:session): session opened for user root(uid=0) by labuser(uid=1000)
+2026-10-21T16:12:56.762976+00:00 ubuntu-target sudo: labuser : TTY=/dev/pts/0 ; PWD=/home/labuser ; USER=root ; COMMAND=/usr/sbin/ufw allow 80/tcp
+2026-10-21T16:12:56.919956+00:00 ubuntu-target sudo: pam_unix(sudo:session): session closed for user root
+2026-10-21T16:12:56.942016+00:00 ubuntu-target sudo: pam_unix(sudo:session): session opened for user root(uid=0) by labuser(uid=1000)
+2026-10-21T16:12:56.942448+00:00 ubuntu-target sudo: labuser : TTY=/dev/pts/0 ; PWD=/home/labuser ; USER=root ; COMMAND=/usr/sbin/ufw logging medium
+2026-10-21T16:12:57.092672+00:00 ubuntu-target sudo: pam_unix(sudo:session): session closed for user root
+2026-10-21T16:12:57.116476+00:00 ubuntu-target sudo: pam_unix(sudo:session): session opened for user root(uid=0) by labuser(uid=1000)
+2026-10-21T16:12:57.116628+00:00 ubuntu-target sudo: labuser : TTY=/dev/pts/0 ; PWD=/home/labuser ; USER=root ; COMMAND=/usr/sbin/ufw enable
+2026-10-21T16:12:57.899197+00:00 ubuntu-target sudo: pam_unix(sudo:session): session closed for user root
+2026-10-21T16:12:57.918701+00:00 ubuntu-target sudo: pam_unix(sudo:session): session opened for user root(uid=0) by labuser(uid=1000)
+2026-10-21T16:12:57.918916+00:00 ubuntu-target sudo: labuser : TTY=/dev/pts/0 ; PWD=/home/labuser ; USER=root ; COMMAND=/usr/sbin/ufw status verbose
+2026-10-21T16:12:58.026967+00:00 ubuntu-target sudo: pam_unix(sudo:session): session closed for user root
+2026-10-21T16:15:41.135632+00:00 ubuntu-target sudo: pam_unix(sudo:session): session opened for user root(uid=0) by labuser(uid=1000)
+2026-10-21T16:15:41.138028+00:00 ubuntu-target sudo: labuser : TTY=/dev/pts/0 ; PWD=/home/labuser ; USER=root ; COMMAND=/usr/bin/tee /var/www/html/health
+2026-10-21T16:15:41.146114+00:00 ubuntu-target sudo: pam_unix(sudo:session): session closed for user root
+2026-10-21T16:15:47.437481+00:00 ubuntu-target sudo: pam_unix(sudo:session): session opened for user root(uid=0) by labuser(uid=1000)
+2026-10-21T16:15:47.438441+00:00 ubuntu-target sudo: labuser : TTY=/dev/pts/0 ; PWD=/home/labuser ; USER=root ; COMMAND=/usr/bin/tail -n 5 /var/log/auth.log
+2026-10-21T16:15:47.445556+00:00 ubuntu-target sudo: pam_unix(sudo:session): session closed for user root
+2026-10-21T16:15:47.465298+00:00 ubuntu-target sudo: pam_unix(sudo:session): session opened for user root(uid=0) by labuser(uid=1000)
+2026-10-21T16:15:47.465443+00:00 ubuntu-target sudo: labuser : TTY=/dev/pts/0 ; PWD=/home/labuser ; USER=root ; COMMAND=/usr/bin/tail -n 3 /var/log/nginx/access.log
+2026-10-21T16:15:47.474625+00:00 ubuntu-target sudo: pam_unix(sudo:session): session closed for user root
+2026-10-21T16:16:23.415637+00:00 ubuntu-target sudo: pam_unix(sudo:session): session opened for user root(uid=0) by labuser(uid=1000)
+2026-10-21T16:16:23.415851+00:00 ubuntu-target sudo: labuser : TTY=/dev/pts/0 ; PWD=/home/labuser ; USER=root ; COMMAND=/usr/bin/tail -n 8 /var/log/ufw.log
+2026-10-21T16:16:23.423638+00:00 ubuntu-target sudo: pam_unix(sudo:session): session closed for user root
+2026-10-21T16:17:01.227553+00:00 ubuntu-target CRON[10624]: pam_unix(cron:session): session opened for user root(uid=0) by root(uid=0)
+2026-10-21T16:17:01.234784+00:00 ubuntu-target CRON[10624]: pam_unix(cron:session): session closed for user root
+2026-10-21T16:17:49.957298+00:00 ubuntu-target sudo: pam_unix(sudo:session): session opened for user root(uid=0) by labuser(uid=1000)
+2026-10-21T16:17:49.957463+00:00 ubuntu-target sudo: labuser : TTY=/dev/pts/0 ; PWD=/home/labuser ; USER=root ; COMMAND=/usr/sbin/ufw logging high
+2026-10-21T16:17:50.491543+00:00 ubuntu-target sudo: pam_unix(sudo:session): session closed for user root
+2026-10-21T16:18:08.883890+00:00 ubuntu-target sudo: pam_unix(sudo:session): session opened for user root(uid=0) by labuser(uid=1000)
+2026-10-21T16:18:08.884427+00:00 ubuntu-target sudo: labuser : TTY=/dev/pts/0 ; PWD=/home/labuser ; USER=root ; COMMAND=/usr/sbin/ufw status verbose
+2026-10-21T16:18:08.985082+00:00 ubuntu-target sudo: pam_unix(sudo:session): session closed for user root
+2026-10-21T16:18:29.985070+00:00 ubuntu-target systemd-logind[1279]: The system will power off now!
+2026-10-21T16:18:30.032712+00:00 ubuntu-target systemd-logind[1279]: System is powering down.
+2026-10-21T16:18:30.064324+00:00 ubuntu-target login: pam_unix(login:session): session closed for user labuser
+2026-10-21T16:18:30.065834+00:00 ubuntu-target sshd-session[1889]: error: mm_reap: child terminated by signal 15
+2026-10-21T16:18:30.066133+00:00 ubuntu-target sshd-session[1889]: pam_unix(sshd:session): session closed for user labuser
+2026-10-21T16:18:30.067389+00:00 ubuntu-target sshd-session[1889]: syslogin_perform_logout: logout() returned an error
+2026-10-21T16:19:29.981356+00:00 ubuntu-target sshd[1233]: Server listening on 0.0.0.0 port 22.
+2026-10-21T16:19:29.981365+00:00 ubuntu-target sshd[1233]: Server listening on :: port 22.
+2026-10-21T16:19:29.981370+00:00 ubuntu-target systemd-logind[1212]: Watching system buttons on /dev/input/event0 (Power Button)
+2026-10-21T16:19:29.981372+00:00 ubuntu-target systemd-logind[1212]: Watching system buttons on /dev/input/event1 (AT Translated Set 2 keyboard)
+2026-10-21T16:19:29.981415+00:00 ubuntu-target systemd-logind[1212]: New seat seat0.
+2026-10-21T16:20:14.058985+00:00 ubuntu-target login: pam_unix(login:session): session opened for user labuser(uid=1000) by labuser(uid=0)
+2026-10-21T16:20:14.083772+00:00 ubuntu-target systemd-logind[1212]: New session '1' of user 'labuser' with class 'user' and type 'tty'.
+2026-10-21T16:20:14.176874+00:00 ubuntu-target (systemd): pam_unix(systemd-user:session): session opened for user labuser(uid=1000) by labuser(uid=0)
+2026-10-21T16:20:14.182509+00:00 ubuntu-target systemd-logind[1212]: New session '2' of user 'labuser' with class 'manager' and type 'unspecified'.
+2026-10-21T16:21:00.721310+00:00 ubuntu-target sshd-session[1962]: Accepted password for labuser from 192.168.214.1 port 57718 ssh2
+2026-10-21T16:21:00.724428+00:00 ubuntu-target sshd-session[1962]: pam_unix(sshd:session): session opened for user labuser(uid=1000) by labuser(uid=0)
+2026-10-21T16:21:00.729164+00:00 ubuntu-target systemd-logind[1212]: New session '3' of user 'labuser' with class 'user' and type 'tty'.
+2026-10-21T16:52:32.229116+00:00 ubuntu-target sshd-session[2329]: Connection reset by authenticating user labuser 192.168.214.1 port 54524 [preauth]
+2026-10-21T16:52:37.371996+00:00 ubuntu-target sshd-session[2331]: Connection reset by authenticating user labuser 192.168.214.1 port 54525 [preauth]
+2026-10-21T16:52:42.497416+00:00 ubuntu-target sshd-session[2333]: Connection reset by authenticating user labuser 192.168.214.1 port 54526 [preauth]
+2026-10-21T16:52:47.620534+00:00 ubuntu-target sshd-session[2335]: Connection reset by authenticating user labuser 192.168.214.1 port 54528 [preauth]
+2026-10-21T16:52:52.750416+00:00 ubuntu-target sshd-session[2337]: Connection reset by authenticating user labuser 192.168.214.1 port 54529 [preauth]
+2026-10-21T16:52:57.885435+00:00 ubuntu-target sshd-session[2340]: Connection reset by authenticating user labuser 192.168.214.1 port 54530 [preauth]
+2026-10-21T16:53:03.006741+00:00 ubuntu-target sshd-session[2342]: Connection reset by authenticating user labuser 192.168.214.1 port 54532 [preauth]
+2026-10-21T16:53:08.129673+00:00 ubuntu-target sshd-session[2344]: Connection reset by authenticating user labuser 192.168.214.1 port 54533 [preauth]
+2026-10-21T16:53:13.265871+00:00 ubuntu-target sshd-session[2346]: Connection reset by authenticating user labuser 192.168.214.1 port 54534 [preauth]
+2026-10-21T16:53:18.394839+00:00 ubuntu-target sshd-session[2348]: Connection reset by authenticating user labuser 192.168.214.1 port 54540 [preauth]
+2026-10-21T16:53:23.524426+00:00 ubuntu-target sshd-session[2350]: Connection reset by authenticating user labuser 192.168.214.1 port 54543 [preauth]
+2026-10-21T16:53:28.645508+00:00 ubuntu-target sshd-session[2355]: Connection reset by authenticating user labuser 192.168.214.1 port 54545 [preauth]
+2026-10-21T16:53:33.766625+00:00 ubuntu-target sshd-session[2357]: Connection reset by authenticating user labuser 192.168.214.1 port 54549 [preauth]
+2026-10-21T16:53:38.883992+00:00 ubuntu-target sshd-session[2359]: Connection reset by authenticating user labuser 192.168.214.1 port 54550 [preauth]
+2026-10-21T16:53:44.012343+00:00 ubuntu-target sshd-session[2362]: Connection reset by authenticating user labuser 192.168.214.1 port 54551 [preauth]
+2026-10-21T16:53:49.130224+00:00 ubuntu-target sshd-session[2364]: Connection reset by authenticating user labuser 192.168.214.1 port 54552 [preauth]
+2026-10-21T16:53:54.254566+00:00 ubuntu-target sshd-session[2366]: Connection reset by authenticating user labuser 192.168.214.1 port 54553 [preauth]
+2026-10-21T16:53:59.370597+00:00 ubuntu-target sshd-session[2369]: Connection reset by authenticating user labuser 192.168.214.1 port 63560 [preauth]
+2026-10-21T16:54:04.493701+00:00 ubuntu-target sshd-session[2371]: Connection reset by authenticating user labuser 192.168.214.1 port 65048 [preauth]
+2026-10-21T16:54:09.617983+00:00 ubuntu-target sshd-session[2373]: Connection reset by authenticating user labuser 192.168.214.1 port 65049 [preauth]
+2026-10-21T16:54:14.746180+00:00 ubuntu-target sshd-session[2376]: Connection reset by authenticating user labuser 192.168.214.1 port 51937 [preauth]
+2026-10-21T16:54:19.873981+00:00 ubuntu-target sshd-session[2379]: Connection reset by authenticating user labuser 192.168.214.1 port 51941 [preauth]
+2026-10-21T16:54:25.005414+00:00 ubuntu-target sshd-session[2381]: Connection reset by authenticating user labuser 192.168.214.1 port 51942 [preauth]
+2026-10-21T16:54:30.140966+00:00 ubuntu-target sshd-session[2383]: Connection reset by authenticating user labuser 192.168.214.1 port 51943 [preauth]
+2026-10-21T16:54:35.268519+00:00 ubuntu-target sshd-session[2386]: Connection reset by authenticating user labuser 192.168.214.1 port 51944 [preauth]
+2026-10-21T16:54:40.394797+00:00 ubuntu-target sshd-session[2389]: Connection reset by authenticating user labuser 192.168.214.1 port 51945 [preauth]
+2026-10-21T16:54:45.512650+00:00 ubuntu-target sshd-session[2391]: Connection reset by authenticating user labuser 192.168.214.1 port 51946 [preauth]
+2026-10-21T16:54:50.633462+00:00 ubuntu-target sshd-session[2393]: Connection reset by authenticating user labuser 192.168.214.1 port 51948 [preauth]
+2026-10-21T16:54:55.759185+00:00 ubuntu-target sshd-session[2395]: Connection reset by authenticating user labuser 192.168.214.1 port 51949 [preauth]
+2026-10-21T16:55:00.877374+00:00 ubuntu-target sshd-session[2398]: Connection reset by authenticating user labuser 192.168.214.1 port 51950 [preauth]
+2026-10-21T16:55:22.171059+00:00 ubuntu-target sshd-session[2400]: Connection reset by authenticating user labuser 192.168.214.1 port 51958 [preauth]
+2026-10-21T16:57:33.785817+00:00 ubuntu-target sshd-session[2406]: Accepted password for labuser from 192.168.214.1 port 56876 ssh2
+2026-10-21T16:57:33.787364+00:00 ubuntu-target sshd-session[2406]: pam_unix(sshd:session): session opened for user labuser(uid=1000) by labuser(uid=0)
+2026-10-21T16:57:33.798677+00:00 ubuntu-target systemd-logind[1212]: New session '4' of user 'labuser' with class 'user' and type 'tty'.
+2026-10-21T16:57:34.805748+00:00 ubuntu-target sshd-session[2507]: Received disconnect from 192.168.214.1 port 56876:11: disconnected by user
+2026-10-21T16:57:34.811297+00:00 ubuntu-target sshd-session[2507]: Disconnected from user labuser 192.168.214.1 port 56876
+2026-10-21T16:57:34.812231+00:00 ubuntu-target sshd-session[2406]: pam_unix(sshd:session): session closed for user labuser
+2026-10-21T16:57:34.813643+00:00 ubuntu-target systemd-logind[1212]: Session 4 logged out. Waiting for processes to exit.
+2026-10-21T16:57:34.816791+00:00 ubuntu-target systemd-logind[1212]: Removed session 4.
+2026-10-21T16:57:48.738169+00:00 ubuntu-target sshd-session[2514]: Accepted password for labuser from 192.168.214.1 port 56877 ssh2
+2026-10-21T16:57:48.739601+00:00 ubuntu-target sshd-session[2514]: pam_unix(sshd:session): session opened for user labuser(uid=1000) by labuser(uid=0)
+2026-10-21T16:57:48.747189+00:00 ubuntu-target systemd-logind[1212]: New session '5' of user 'labuser' with class 'user' and type 'tty'.
+2026-10-21T16:57:54.924933+00:00 ubuntu-target sudo: pam_unix(sudo:session): session opened for user root(uid=0) by labuser(uid=1000)
+2026-10-21T16:57:54.925693+00:00 ubuntu-target sudo: labuser : TTY=/dev/pts/1 ; PWD=/home/labuser ; USER=root ; COMMAND=/usr/sbin/usermod -aG adm labuser
+2026-10-21T16:57:54.955178+00:00 ubuntu-target sudo: pam_unix(sudo:session): session closed for user root
+2026-10-21T16:57:54.958811+00:00 ubuntu-target sshd-session[2514]: syslogin_perform_logout: logout() returned an error
+2026-10-21T16:57:54.961702+00:00 ubuntu-target sshd-session[2563]: Received disconnect from 192.168.214.1 port 56877:11: disconnected by user
+2026-10-21T16:57:54.962489+00:00 ubuntu-target sshd-session[2563]: Disconnected from user labuser 192.168.214.1 port 56877
+2026-10-21T16:57:54.962781+00:00 ubuntu-target sshd-session[2514]: pam_unix(sshd:session): session closed for user labuser
+2026-10-21T16:57:54.968950+00:00 ubuntu-target systemd-logind[1212]: Session 5 logged out. Waiting for processes to exit.
+2026-10-21T16:57:54.971392+00:00 ubuntu-target systemd-logind[1212]: Removed session 5.
+2026-10-21T16:58:32.552381+00:00 ubuntu-target sshd-session[2578]: Accepted publickey for labuser from 192.168.214.1 port 56880 ssh2: ED25519 SHA256:BrffX3K8ctOj+CLSUNfx8GXX97p47iQp2moKyXUByzQ
+2026-10-21T16:58:32.552723+00:00 ubuntu-target sshd-session[2578]: pam_unix(sshd:session): session opened for user labuser(uid=1000) by labuser(uid=0)
+2026-10-21T16:58:32.559542+00:00 ubuntu-target systemd-logind[1212]: New session '6' of user 'labuser' with class 'user' and type 'tty'.
+2026-10-21T16:58:32.768169+00:00 ubuntu-target sshd-session[2626]: Received disconnect from 192.168.214.1 port 56880:11: disconnected by user
+2026-10-21T16:58:32.769557+00:00 ubuntu-target sshd-session[2626]: Disconnected from user labuser 192.168.214.1 port 56880
+2026-10-21T16:58:32.771208+00:00 ubuntu-target sshd-session[2578]: pam_unix(sshd:session): session closed for user labuser
+2026-10-21T16:58:32.774696+00:00 ubuntu-target systemd-logind[1212]: Session 6 logged out. Waiting for processes to exit.
+2026-10-21T16:58:32.776514+00:00 ubuntu-target systemd-logind[1212]: Removed session 6.
+2026-10-21T17:14:50.818190+00:00 ubuntu-target sshd-session[2845]: Accepted publickey for labuser from 192.168.214.1 port 65258 ssh2: ED25519 SHA256:BrffX3K8ctOj+CLSUNfx8GXX97p47iQp2moKyXUByzQ
+2026-10-21T17:14:50.821960+00:00 ubuntu-target sshd-session[2845]: pam_unix(sshd:session): session opened for user labuser(uid=1000) by labuser(uid=0)
+2026-10-21T17:14:50.840855+00:00 ubuntu-target systemd-logind[1212]: New session '7' of user 'labuser' with class 'user' and type 'tty'.
+2026-10-21T17:14:52.081262+00:00 ubuntu-target sshd-session[2960]: Received disconnect from 192.168.214.1 port 65258:11: disconnected by user
+2026-10-21T17:14:52.086570+00:00 ubuntu-target sshd-session[2960]: Disconnected from user labuser 192.168.214.1 port 65258
+2026-10-21T17:14:52.088432+00:00 ubuntu-target sshd-session[2845]: pam_unix(sshd:session): session closed for user labuser
+2026-10-21T17:14:52.090630+00:00 ubuntu-target systemd-logind[1212]: Session 7 logged out. Waiting for processes to exit.
+2026-10-21T17:14:52.093281+00:00 ubuntu-target systemd-logind[1212]: Removed session 7.
+2026-10-21T17:14:52.229928+00:00 ubuntu-target sshd-session[2963]: Accepted publickey for labuser from 192.168.214.1 port 65259 ssh2: ED25519 SHA256:BrffX3K8ctOj+CLSUNfx8GXX97p47iQp2moKyXUByzQ
+2026-10-21T17:14:52.232502+00:00 ubuntu-target sshd-session[2963]: pam_unix(sshd:session): session opened for user labuser(uid=1000) by labuser(uid=0)
+2026-10-21T17:14:52.239447+00:00 ubuntu-target systemd-logind[1212]: New session '8' of user 'labuser' with class 'user' and type 'tty'.
+2026-10-21T17:14:52.522456+00:00 ubuntu-target sshd-session[3011]: Received disconnect from 192.168.214.1 port 65259:11: disconnected by user
+2026-10-21T17:14:52.523249+00:00 ubuntu-target sshd-session[3011]: Disconnected from user labuser 192.168.214.1 port 65259
+2026-10-21T17:14:52.523471+00:00 ubuntu-target sshd-session[2963]: pam_unix(sshd:session): session closed for user labuser
+2026-10-21T17:14:52.528990+00:00 ubuntu-target systemd-logind[1212]: Session 8 logged out. Waiting for processes to exit.
+2026-10-21T17:14:52.532575+00:00 ubuntu-target systemd-logind[1212]: Removed session 8.
+2026-10-21T17:17:01.106513+00:00 ubuntu-target CRON[3018]: pam_unix(cron:session): session opened for user root(uid=0) by root(uid=0)
+2026-10-21T17:17:01.114608+00:00 ubuntu-target CRON[3018]: pam_unix(cron:session): session closed for user root
+2026-10-21T17:18:02.224899+00:00 ubuntu-target sshd-session[3026]: Accepted publickey for labuser from 192.168.214.1 port 64936 ssh2: ED25519 SHA256:BrffX3K8ctOj+CLSUNfx8GXX97p47iQp2moKyXUByzQ
+2026-10-21T17:18:02.229199+00:00 ubuntu-target sshd-session[3026]: pam_unix(sshd:session): session opened for user labuser(uid=1000) by labuser(uid=0)
+2026-10-21T17:18:02.233288+00:00 ubuntu-target systemd-logind[1212]: New session '10' of user 'labuser' with class 'user' and type 'tty'.
+2026-10-21T17:18:02.808479+00:00 ubuntu-target sudo: pam_unix(sudo:auth): conversation failed
+2026-10-21T17:18:02.813044+00:00 ubuntu-target sudo: pam_unix(sudo:auth): auth could not identify password for [labuser]
+2026-10-21T17:18:02.815805+00:00 ubuntu-target sshd-session[3083]: Received disconnect from 192.168.214.1 port 64936:11: disconnected by user
+2026-10-21T17:18:02.816335+00:00 ubuntu-target sshd-session[3083]: Disconnected from user labuser 192.168.214.1 port 64936
+2026-10-21T17:18:02.817477+00:00 ubuntu-target sshd-session[3026]: pam_unix(sshd:session): session closed for user labuser
+2026-10-21T17:18:02.821658+00:00 ubuntu-target systemd-logind[1212]: Session 10 logged out. Waiting for processes to exit.
+2026-10-21T17:18:02.824273+00:00 ubuntu-target systemd-logind[1212]: Removed session 10.
+2026-10-21T17:19:51.010749+00:00 ubuntu-target sshd-session[3093]: Accepted publickey for labuser from 192.168.214.1 port 64943 ssh2: ED25519 SHA256:BrffX3K8ctOj+CLSUNfx8GXX97p47iQp2moKyXUByzQ
+2026-10-21T17:19:51.013620+00:00 ubuntu-target sshd-session[3093]: pam_unix(sshd:session): session opened for user labuser(uid=1000) by labuser(uid=0)
+2026-10-21T17:19:51.020120+00:00 ubuntu-target systemd-logind[1212]: New session '11' of user 'labuser' with class 'user' and type 'tty'.
+2026-10-21T17:19:51.534347+00:00 ubuntu-target sshd-session[3093]: syslogin_perform_logout: logout() returned an error
+2026-10-21T17:19:51.537516+00:00 ubuntu-target sshd-session[3150]: Received disconnect from 192.168.214.1 port 64943:11: disconnected by user
+2026-10-21T17:19:51.538110+00:00 ubuntu-target sshd-session[3150]: Disconnected from user labuser 192.168.214.1 port 64943
+2026-10-21T17:19:51.538310+00:00 ubuntu-target sshd-session[3093]: pam_unix(sshd:session): session closed for user labuser
+2026-10-21T17:19:51.542438+00:00 ubuntu-target systemd-logind[1212]: Session 11 logged out. Waiting for processes to exit.
+2026-10-21T17:19:51.544798+00:00 ubuntu-target systemd-logind[1212]: Removed session 11.
+2026-10-21T17:20:14.957445+00:00 ubuntu-target sshd-session[3159]: Accepted publickey for labuser from 192.168.214.1 port 53793 ssh2: ED25519 SHA256:BrffX3K8ctOj+CLSUNfx8GXX97p47iQp2moKyXUByzQ
+2026-10-21T17:20:14.959686+00:00 ubuntu-target sshd-session[3159]: pam_unix(sshd:session): session opened for user labuser(uid=1000) by labuser(uid=0)
+2026-10-21T17:20:14.963860+00:00 ubuntu-target systemd-logind[1212]: New session '12' of user 'labuser' with class 'user' and type 'tty'.
+2026-10-21T17:20:19.693277+00:00 ubuntu-target sudo: pam_unix(sudo:session): session opened for user root(uid=0) by labuser(uid=1000)
+2026-10-21T17:20:19.693802+00:00 ubuntu-target sudo: labuser : TTY=/dev/pts/1 ; PWD=/home/labuser ; USER=root ; COMMAND=/usr/sbin/useradd -m victim
+2026-10-21T17:20:19.728295+00:00 ubuntu-target useradd[3213]: new group: name=victim, GID=1001
+2026-10-21T17:20:19.728882+00:00 ubuntu-target useradd[3213]: new user: name=victim, UID=1001, GID=1001, home=/home/victim, shell=/bin/sh, from=/dev/pts/2
+2026-10-21T17:20:19.773815+00:00 ubuntu-target sudo: pam_unix(sudo:session): session closed for user root
+2026-10-21T17:20:19.787364+00:00 ubuntu-target sudo: pam_unix(sudo:session): session opened for user root(uid=0) by labuser(uid=1000)
+2026-10-21T17:20:19.787753+00:00 ubuntu-target sudo: labuser : TTY=/dev/pts/1 ; PWD=/home/labuser ; USER=root ; COMMAND=/usr/sbin/chpasswd 
+2026-10-21T17:20:19.842848+00:00 ubuntu-target chpasswd[3222]: pam_unix(chpasswd:chauthtok): password changed for victim
+2026-10-21T17:20:19.845029+00:00 ubuntu-target sudo: pam_unix(sudo:session): session closed for user root
+2026-10-21T17:20:19.852739+00:00 ubuntu-target sshd-session[3159]: syslogin_perform_logout: logout() returned an error
+2026-10-21T17:20:19.853507+00:00 ubuntu-target sshd-session[3207]: Received disconnect from 192.168.214.1 port 53793:11: disconnected by user
+2026-10-21T17:20:19.854722+00:00 ubuntu-target sshd-session[3207]: Disconnected from user labuser 192.168.214.1 port 53793
+2026-10-21T17:20:19.855512+00:00 ubuntu-target sshd-session[3159]: pam_unix(sshd:session): session closed for user labuser
+2026-10-21T17:20:19.861956+00:00 ubuntu-target systemd-logind[1212]: Session 12 logged out. Waiting for processes to exit.
+2026-10-21T17:20:19.863423+00:00 ubuntu-target systemd-logind[1212]: Removed session 12.
+2026-10-21T17:20:39.956185+00:00 ubuntu-target sshd-session[3229]: Accepted publickey for labuser from 192.168.214.1 port 53796 ssh2: ED25519 SHA256:BrffX3K8ctOj+CLSUNfx8GXX97p47iQp2moKyXUByzQ
+2026-10-21T17:20:39.959958+00:00 ubuntu-target sshd-session[3229]: pam_unix(sshd:session): session opened for user labuser(uid=1000) by labuser(uid=0)
+2026-10-21T17:20:39.964088+00:00 ubuntu-target systemd-logind[1212]: New session '13' of user 'labuser' with class 'user' and type 'tty'.
+2026-10-21T17:20:40.148090+00:00 ubuntu-target sshd-session[3277]: Received disconnect from 192.168.214.1 port 53796:11: disconnected by user
+2026-10-21T17:20:40.148676+00:00 ubuntu-target sshd-session[3277]: Disconnected from user labuser 192.168.214.1 port 53796
+2026-10-21T17:20:40.148834+00:00 ubuntu-target sshd-session[3229]: pam_unix(sshd:session): session closed for user labuser
+2026-10-21T17:20:40.153093+00:00 ubuntu-target systemd-logind[1212]: Session 13 logged out. Waiting for processes to exit.
+2026-10-21T17:20:40.154572+00:00 ubuntu-target systemd-logind[1212]: Removed session 13.
+2026-10-21T18:33:48.312707+00:00 ubuntu-target sshd-session[3504]: Accepted publickey for labuser from 192.168.214.1 port 57288 ssh2: ED25519 SHA256:BrffX3K8ctOj+CLSUNfx8GXX97p47iQp2moKyXUByzQ
+2026-10-21T18:33:48.315026+00:00 ubuntu-target sshd-session[3504]: pam_unix(sshd:session): session opened for user labuser(uid=1000) by labuser(uid=0)
+2026-10-21T18:33:48.331504+00:00 ubuntu-target systemd-logind[1212]: New session '14' of user 'labuser' with class 'user' and type 'tty'.
+2026-10-21T18:33:49.503751+00:00 ubuntu-target sshd-session[3603]: Received disconnect from 192.168.214.1 port 57288:11: disconnected by user
+2026-10-21T18:33:49.506248+00:00 ubuntu-target sshd-session[3603]: Disconnected from user labuser 192.168.214.1 port 57288
+2026-10-21T18:33:49.507576+00:00 ubuntu-target sshd-session[3504]: pam_unix(sshd:session): session closed for user labuser
+2026-10-21T18:33:49.513388+00:00 ubuntu-target systemd-logind[1212]: Session 14 logged out. Waiting for processes to exit.
+2026-10-21T18:33:49.514241+00:00 ubuntu-target systemd-logind[1212]: Removed session 14.
+2026-10-21T18:33:49.650027+00:00 ubuntu-target sshd-session[3606]: Accepted publickey for labuser from 192.168.214.1 port 57289 ssh2: ED25519 SHA256:BrffX3K8ctOj+CLSUNfx8GXX97p47iQp2moKyXUByzQ
+2026-10-21T18:33:49.653240+00:00 ubuntu-target sshd-session[3606]: pam_unix(sshd:session): session opened for user labuser(uid=1000) by labuser(uid=0)
+2026-10-21T18:33:49.657225+00:00 ubuntu-target systemd-logind[1212]: New session '15' of user 'labuser' with class 'user' and type 'tty'.
+2026-10-21T18:33:49.855900+00:00 ubuntu-target sshd-session[3654]: Received disconnect from 192.168.214.1 port 57289:11: disconnected by user
+2026-10-21T18:33:49.859607+00:00 ubuntu-target sshd-session[3654]: Disconnected from user labuser 192.168.214.1 port 57289
+2026-10-21T18:33:49.860038+00:00 ubuntu-target sshd-session[3606]: pam_unix(sshd:session): session closed for user labuser
+2026-10-21T18:33:49.860610+00:00 ubuntu-target systemd-logind[1212]: Session 15 logged out. Waiting for processes to exit.
+2026-10-21T18:33:49.863227+00:00 ubuntu-target systemd-logind[1212]: Removed session 15.
+2026-10-21T18:33:49.989897+00:00 ubuntu-target sshd-session[3657]: Accepted publickey for labuser from 192.168.214.1 port 57290 ssh2: ED25519 SHA256:BrffX3K8ctOj+CLSUNfx8GXX97p47iQp2moKyXUByzQ
+2026-10-21T18:33:49.990227+00:00 ubuntu-target sshd-session[3657]: pam_unix(sshd:session): session opened for user labuser(uid=1000) by labuser(uid=0)
+2026-10-21T18:33:49.993638+00:00 ubuntu-target systemd-logind[1212]: New session '16' of user 'labuser' with class 'user' and type 'tty'.
+2026-10-21T18:33:50.212394+00:00 ubuntu-target sshd-session[3705]: Received disconnect from 192.168.214.1 port 57290:11: disconnected by user
+2026-10-21T18:33:50.215594+00:00 ubuntu-target sshd-session[3705]: Disconnected from user labuser 192.168.214.1 port 57290
+2026-10-21T18:33:50.215809+00:00 ubuntu-target sshd-session[3657]: pam_unix(sshd:session): session closed for user labuser
+2026-10-21T18:33:50.218009+00:00 ubuntu-target systemd-logind[1212]: Session 16 logged out. Waiting for processes to exit.
+2026-10-21T18:33:50.222323+00:00 ubuntu-target systemd-logind[1212]: Removed session 16.
+2026-10-21T18:33:50.344296+00:00 ubuntu-target sshd-session[3711]: Accepted publickey for labuser from 192.168.214.1 port 57291 ssh2: ED25519 SHA256:BrffX3K8ctOj+CLSUNfx8GXX97p47iQp2moKyXUByzQ
+2026-10-21T18:33:50.345962+00:00 ubuntu-target sshd-session[3711]: pam_unix(sshd:session): session opened for user labuser(uid=1000) by labuser(uid=0)
+2026-10-21T18:33:50.352959+00:00 ubuntu-target systemd-logind[1212]: New session '17' of user 'labuser' with class 'user' and type 'tty'.
+2026-10-21T18:33:50.553553+00:00 ubuntu-target sshd-session[3759]: Received disconnect from 192.168.214.1 port 57291:11: disconnected by user
+2026-10-21T18:33:50.554281+00:00 ubuntu-target sshd-session[3759]: Disconnected from user labuser 192.168.214.1 port 57291
+2026-10-21T18:33:50.554448+00:00 ubuntu-target sshd-session[3711]: pam_unix(sshd:session): session closed for user labuser
+2026-10-21T18:33:50.560750+00:00 ubuntu-target systemd-logind[1212]: Session 17 logged out. Waiting for processes to exit.
+2026-10-21T18:33:50.562270+00:00 ubuntu-target systemd-logind[1212]: Removed session 17.
+2026-10-21T18:33:51.250694+00:00 ubuntu-target sshd-session[3762]: Accepted publickey for labuser from 192.168.214.1 port 57293 ssh2: ED25519 SHA256:BrffX3K8ctOj+CLSUNfx8GXX97p47iQp2moKyXUByzQ
+2026-10-21T18:33:51.255585+00:00 ubuntu-target sshd-session[3762]: pam_unix(sshd:session): session opened for user labuser(uid=1000) by labuser(uid=0)
+2026-10-21T18:33:51.260439+00:00 ubuntu-target systemd-logind[1212]: New session '18' of user 'labuser' with class 'user' and type 'tty'.
+2026-10-21T18:33:51.464374+00:00 ubuntu-target sshd-session[3810]: Received disconnect from 192.168.214.1 port 57293:11: disconnected by user
+2026-10-21T18:33:51.465148+00:00 ubuntu-target sshd-session[3810]: Disconnected from user labuser 192.168.214.1 port 57293
+2026-10-21T18:33:51.465434+00:00 ubuntu-target sshd-session[3762]: pam_unix(sshd:session): session closed for user labuser
+2026-10-21T18:33:51.471884+00:00 ubuntu-target systemd-logind[1212]: Session 18 logged out. Waiting for processes to exit.
+2026-10-21T18:33:51.474686+00:00 ubuntu-target systemd-logind[1212]: Removed session 18.
+2026-10-21T18:34:52.430761+00:00 ubuntu-target sshd-session[3813]: Accepted publickey for labuser from 192.168.214.1 port 57301 ssh2: ED25519 SHA256:BrffX3K8ctOj+CLSUNfx8GXX97p47iQp2moKyXUByzQ
+2026-10-21T18:34:52.434780+00:00 ubuntu-target sshd-session[3813]: pam_unix(sshd:session): session opened for user labuser(uid=1000) by labuser(uid=0)
+2026-10-21T18:34:52.439557+00:00 ubuntu-target systemd-logind[1212]: New session '19' of user 'labuser' with class 'user' and type 'tty'.
+2026-10-21T18:34:53.061031+00:00 ubuntu-target sshd-session[3870]: Received disconnect from 192.168.214.1 port 57301:11: disconnected by user
+2026-10-21T18:34:53.061946+00:00 ubuntu-target sshd-session[3870]: Disconnected from user labuser 192.168.214.1 port 57301
+2026-10-21T18:34:53.062097+00:00 ubuntu-target sshd-session[3813]: pam_unix(sshd:session): session closed for user labuser
+2026-10-21T18:34:53.066610+00:00 ubuntu-target systemd-logind[1212]: Session 19 logged out. Waiting for processes to exit.
+2026-10-21T18:34:53.068733+00:00 ubuntu-target systemd-logind[1212]: Removed session 19.
+2026-10-21T18:34:53.234321+00:00 ubuntu-target sshd-session[3873]: Accepted publickey for labuser from 192.168.214.1 port 57302 ssh2: ED25519 SHA256:BrffX3K8ctOj+CLSUNfx8GXX97p47iQp2moKyXUByzQ
+2026-10-21T18:34:53.237386+00:00 ubuntu-target sshd-session[3873]: pam_unix(sshd:session): session opened for user labuser(uid=1000) by labuser(uid=0)
+2026-10-21T18:34:53.247338+00:00 ubuntu-target systemd-logind[1212]: New session '20' of user 'labuser' with class 'user' and type 'tty'.
