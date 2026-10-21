@@ -1,0 +1,15 @@
+# secrets
+.env
+.env.*
+!.env.example
+
+# private / third-party data (HTB etc.), never commit
+data/private/
+results/raw_private/
+
+# python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
