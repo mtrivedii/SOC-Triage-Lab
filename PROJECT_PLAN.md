@@ -418,7 +418,7 @@ Pick at most one:
 
 ## 11. Current state / handoff (read this when starting a new chat)
 
-**Last updated:** 2026-10-21. **Current sprint:** 0 done (except recording rate limits); next is Sprint 1.
+**Last updated:** 2026-10-21. **Current sprint:** 1 (lab and log collection), just started. Sprint 0 is done except recording the free-tier rate limits.
 
 **How to resume in a new chat:** give the assistant `PROJECT_PLAN.md` and `CLAUDE.md` from this repo (`mtrivedii/soc-triage-lab`, private). Then confirm the sprint from the Progress Log and continue.
 
@@ -434,6 +434,11 @@ Pick at most one:
 
 **Still open from Sprint 0 (needs me):**
 - [ ] Read free-tier limits for `gemini-3.8-flash` (https://aistudio.google.com/rate-limit) and `openai/gpt-oss-120b` (Groq console limits page) and record them in `docs/providers.md` with the date.
+
+**Sprint 1 state (2026-10-21):**
+- VMware Workstation Pro. Lab Kali = clone of the original (updated and upgraded); original Kali stays for HTB.
+- Ubuntu Server 26.04.1 LTS target VM is installed and running (NAT adapter for now). Nothing else configured on it yet.
+- **Next step (user, on waking):** Phase A on the target, checklist in `docs/lab_journal.md`. Then paste the output of the "check logs and clock" step so the assistant can record real log formats. Then Phase B: switch both VMs to host-only, verify isolation, snapshot `clean-base`, then generate scenarios.
 
 **Next:** Sprint 1 (lab and log collection). It needs me to build the Ubuntu target VM on a host-only network and run the attack commands from Kali; the assistant only gives commands and expected outcomes.
 
