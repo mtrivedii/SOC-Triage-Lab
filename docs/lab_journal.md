@@ -66,3 +66,12 @@ Observations that affect the parser and detectors:
 - Interpretation: the log holds only a fraction of the scanned ports (about 40% distinct), so some packets are not logged even at `high`. Cause not confirmed (possible kernel or rsyslog rate limiting). Retransmissions at -T4 may also mean several lines per port.
 - Consequence: port-scan detector should key on many distinct destination ports from one source in a short window (thresholds far below 1985); do not rely on complete logs. Limitation to state in the README: ufw log is incomplete under heavy scans.
 - Optional check not yet done: `sudo dmesg | grep -i suppress` or `journalctl -k | grep -i suppress` for "callbacks suppressed" messages.
+
+## ssh_bruteforce_fail_01 (2026-10-21T17:07:55Z UTC)
+- Target: ubuntu-target @ 192.168.214.129 (verified). Kali: kali@192.168.214.130. Logs via adm-group read (no password).
+- Window (target clock, UTC): start=2026-10-21T17:07:55Z end=2026-10-21T17:08:36Z
+- Clock check: target=2026-10-21T17:07:54Z kali=2026-10-21T17:07:54Z
+- Attack (from Kali): `head -n 50 /usr/share/wordlists/rockyou.txt > /tmp/wl50.txt; hydra -l labuser -P /tmp/wl50.txt -t 4 -I -o /tmp/hydra_out.txt ssh://192.168.214.129`
+- Expected: SSH brute force, failures only - correct password NOT in the 50-word list, so all attempts fail
+- Attack exit code: 255. auth.log lines in window (approx): 176
+- Logs copied to: data/raw/ssh_bruteforce_fail_01/ (auth.log, ufw.log, nginx_access.log, attack_output.txt)
