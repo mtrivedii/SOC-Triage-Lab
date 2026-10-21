@@ -106,3 +106,12 @@ Observations that affect the parser and detectors:
 ## Known issues
 - **Early commit-message mismatches (data is correct and verified, history left as-is):** `5b4106e` is titled "Refactor code structure..." but contains `ssh_bruteforce_fail_01`'s data; `31656c0` is titled "Add ssh_bruteforce_fail_01 case logs" but its diff contains `ssh_bruteforce_success_01`'s files. Not rewritten (avoiding repeated force-pushes). The case logs themselves are verified correct.
 - **Large raw ufw.log for full-range scans:** `port_scan_01/ufw.log` is ~35 MB / 132k lines. Trimming to the case window removes only ~0.9% (1,231 of 132,373 lines) because the scan traffic is itself in-window. Real size reduction needs a different lever (git-LFS, a capped port range, or dedup-by-destination-port) — under discussion before more scan cases.
+
+## benign_ssh_login_01 (2026-10-21T18:28:53Z UTC)
+- Target: ubuntu-target @ 192.168.214.129 (verified). Kali: kali@192.168.214.130. Logs via adm-group read (no password).
+- Window (target clock, UTC): start=2026-10-21T18:28:53Z end=2026-10-21T18:28:56Z
+- Clock check: target=2026-10-21T18:28:53Z kali=2026-10-21T18:28:53Z
+- Attack (from Kali): `SSH_ASKPASS=/tmp/askpass SSH_ASKPASS_REQUIRE=force setsid -w ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o PreferredAuthentications=password -o PubkeyAuthentication=no victim@192.168.214.129 "echo hi; exit" </dev/null`
+- Expected: BENIGN: a single normal SSH login as victim from Kali (192.168.214.130) using the correct password (password auth). Expect exactly one 'Accepted password for victim from 192.168.214.130' and no failed-password lines. False-positive check for the SSH brute-force detector.
+- Attack exit code: 0. auth.log lines in window (approx): 47
+- Logs copied to: data/raw/benign_ssh_login_01/ (auth.log, ufw.log, nginx_access.log, attack_output.txt)
