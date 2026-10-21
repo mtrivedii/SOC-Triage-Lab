@@ -7,6 +7,10 @@
 data/private/
 results/raw_private/
 
+# raw attack-tool output may contain secrets (e.g. a cracked password in the
+# success scenario). Never commit it; the journal records the command instead.
+data/raw/*/attack_output.txt
+
 # python
 .venv/
 __pycache__/
