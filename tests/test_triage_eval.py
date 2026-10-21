@@ -56,6 +56,16 @@ def test_score_run_guardrail_flag():
     assert s["guardrail_flagged"] is True
 
 
+def test_filter_by_hash():
+    recs = [
+        {"prompt_hash": "aaa", "case_id": "x"},
+        {"prompt_hash": "bbb", "case_id": "x"},
+        {"prompt_hash": "aaa", "case_id": "y"},
+    ]
+    kept, ignored = triage_eval.filter_by_hash(recs, "aaa")
+    assert len(kept) == 2 and ignored == 1
+
+
 def test_summarize_and_render():
     cases = {
         "ssh_bruteforce_success_01": {"expected": EXPECTED},

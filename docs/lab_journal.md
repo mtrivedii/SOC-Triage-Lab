@@ -175,3 +175,13 @@ cases):**
   src_ip, target_host, usernames, first_seen/last_seen).
 Read Sprint 4's guardrail-flag counts with these two documented, accepted sources in mind — they are
 real guardrail catches, not a sign something broke.
+
+## Free-tier rate limit hit: Gemini (2026-10-22)
+Running the Sprint 4 batch (`--runs 3`, both providers) hit the Google AI Studio free-tier daily cap
+for `gemini-3.8-flash`: **20 generate_content requests/day** (HTTP 429 `RESOURCE_EXHAUSTED`, retry after
+~8h). The batch had already used some quota from the pre-freeze reads, so it exhausted mid-run on the
+last case. `scripts/triage_batch.py` now catches this: on a rate limit it marks the provider exhausted,
+skips its remaining calls, and keeps going (records already written are preserved) rather than crashing.
+Consequence for the eval: Gemini can realistically do ~2 runs/case for 5 cases (10 calls) per day, or 3
+runs over two days. Groq's caps are higher; prefer Groq for the full 3x matrix. Record exact Groq limits
+when next observed.

@@ -21,6 +21,7 @@ import argparse
 import time
 from pathlib import Path
 
+import openai
 import yaml
 
 from triage.guardrails import check, load_allowlist
@@ -57,7 +58,9 @@ def main(argv: list[str] | None = None) -> int:
     print(f"prompt {args.version} ({ph[:12]}) | providers={providers} | runs={args.runs}")
     clients = {p: make_client(p) for p in providers}  # real network clients
 
+    exhausted: set[str] = set()
     total = 0
+    errored = 0
     for case in cases:
         alerts = alerts_for_case(case, ROOT)
         if not alerts:
@@ -65,12 +68,28 @@ def main(argv: list[str] | None = None) -> int:
             continue
         alert = alerts[0]
         for provider in providers:
+            if provider in exhausted:
+                print(f"- skip {case['case_id']} | {provider} (quota exhausted earlier)")
+                continue
             model = get_model(provider)
             for i in range(args.runs):
                 print(f"- {case['case_id']} | {provider}/{model} | run {i}...", flush=True)
-                call = triage_call(
-                    alert.to_dict(), model, clients[provider], prompt, list(allow)
-                )
+                try:
+                    call = triage_call(
+                        alert.to_dict(), model, clients[provider], prompt, list(allow)
+                    )
+                except openai.RateLimitError as exc:
+                    print(f"  RATE LIMIT ({provider}): {getattr(exc, 'message', str(exc))}")
+                    print(f"  marking {provider} exhausted; skipping its remaining runs/cases.")
+                    exhausted.add(provider)
+                    break
+                except openai.APIError as exc:
+                    print(f"  API ERROR ({provider}): {type(exc).__name__}: {exc}")
+                    errored += 1
+                    if args.sleep:
+                        time.sleep(args.sleep)
+                    continue
+
                 report = (
                     check(call.result, alert, allow)
                     if isinstance(call.result, TriageResult)
@@ -95,6 +114,10 @@ def main(argv: list[str] | None = None) -> int:
                     time.sleep(args.sleep)
 
     print(f"\nAppended {total} run records to {out.relative_to(ROOT)}")
+    if errored:
+        print(f"{errored} call(s) errored and were skipped.")
+    if exhausted:
+        print(f"Providers hit rate limits (incomplete): {sorted(exhausted)}")
     print("Score with: uv run python eval/triage_eval.py")
     return 0
 

@@ -10,10 +10,13 @@ guardrail-flag rate, mean tokens/cost. Compared against the Sprint 2 detector-on
 
 from __future__ import annotations
 
+import argparse
 import json
 from pathlib import Path
 
 import yaml
+
+from triage.llm.prompts import load_prompt, prompt_hash
 
 ROOT = Path(__file__).resolve().parent.parent
 _GUARDRAIL_KEYS = (
@@ -36,6 +39,14 @@ def load_runs(path: Path) -> list[dict]:
     if not path.exists():
         return []
     return [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
+
+
+def filter_by_hash(records: list[dict], wanted_hash: str) -> tuple[list[dict], int]:
+    """Keep only runs made with the given prompt hash (so stale/pre-freeze runs in an
+    accumulated runs.jsonl do not contaminate the table). Returns (kept, ignored_count).
+    """
+    kept = [r for r in records if r.get("prompt_hash") == wanted_hash]
+    return kept, len(records) - len(kept)
 
 
 def score_run(record: dict, expected: dict) -> dict:
@@ -112,7 +123,9 @@ def summarize(records: list[dict], cases: dict[str, dict]) -> list[dict]:
     return summary
 
 
-def render_markdown(summary: list[dict], cases: dict[str, dict]) -> str:
+def render_markdown(
+    summary: list[dict], cases: dict[str, dict], prompt_note: str | None = None
+) -> str:
     alerting = {s["case_id"] for s in summary}
     benign_no_alert = sorted(
         c for c, case in cases.items()
@@ -131,7 +144,10 @@ def render_markdown(summary: list[dict], cases: dict[str, dict]) -> str:
         "|------|----------|----------|------|-------|------------|---------|---------|"
         "--------|--------|-------------------|----------|--------|"
     )
-    lines = ["# LLM triage eval (vs detector-only baseline)", "", intro, "", header, divider]
+    lines = ["# LLM triage eval (vs detector-only baseline)", "", intro]
+    if prompt_note:
+        lines += ["", prompt_note]
+    lines += ["", header, divider]
     for s in summary:
         exp = s["expected"]
         lines.append(
@@ -159,15 +175,30 @@ def render_markdown(summary: list[dict], cases: dict[str, dict]) -> str:
 
 
 def main() -> None:
+    ap = argparse.ArgumentParser(description="Score LLM triage runs (offline).")
+    ap.add_argument("--version", default="v1", help="prompt version whose hash to score")
+    ap.add_argument("--prompt-hash", default=None, help="score only this exact prompt hash")
+    ap.add_argument("--all-hashes", action="store_true", help="score every run, any prompt hash")
+    args = ap.parse_args()
+
     cases = load_cases()
     records = load_runs(ROOT / "results" / "runs.jsonl")
+    prompt_note = None
+    if not args.all_hashes:
+        wanted = args.prompt_hash or prompt_hash(load_prompt(args.version))
+        records, ignored = filter_by_hash(records, wanted)
+        prompt_note = (
+            f"Scored {len(records)} run(s) at prompt {args.version} ({wanted[:12]}...); "
+            f"ignored {ignored} run(s) at other prompt hashes."
+        )
+
     summary = summarize(records, cases)
-    md = render_markdown(summary, cases)
+    md = render_markdown(summary, cases, prompt_note)
     out = ROOT / "results" / "eval_summary.md"
     out.write_text(md, encoding="utf-8")
     print(md)
     if not records:
-        print("NOTE: results/runs.jsonl is empty — run scripts/triage_batch.py (live) first.")
+        print("NOTE: no runs to score - run scripts/triage_batch.py (live) first.")
     print(f"Wrote {out.relative_to(ROOT)}")
 
 

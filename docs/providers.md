@@ -25,7 +25,8 @@ Pinned in `config/models.toml`. Both IDs appeared in `client.models.list()` and 
 | Groq | `openai/gpt-oss-120b` | Planned choice, present in the list. | Answered in about 0.1 s of model time; usage 78 in / 32 out (22 reasoning). |
 
 ## Free-tier rate limits
-Not recorded yet: waiting for the user to read them from AI Studio (https://aistudio.google.com/rate-limit) and the Groq console. Do not fill these in from memory or docs.
+- **Gemini `gemini-3.8-flash` (observed 2026-10-22):** free tier = **20 `generate_content` requests/day** per project per model (quota id `GenerateRequestsPerDayPerProjectPerModel-FreeTier`). Observed directly via an HTTP 429 `RESOURCE_EXHAUSTED` during the Sprint 4 batch; resets ~daily (retry window ~8h reported). This caps Gemini at ~2 runs/case for the 5 alerting cases per day.
+- **Groq `openai/gpt-oss-120b`:** not yet observed live; docs table (to confirm in the console) is 30 RPM, 1K req/day, 8K tokens/min, 200K tokens/day — token caps are the real constraint. Prefer Groq for the full 3x matrix.
 
 ## Secrets check (manual, 2026-10-21)
 Done instead of a gitleaks hook (Sprint 0 cut list). Re-run in Sprint 7 before going public.
