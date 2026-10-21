@@ -18,7 +18,10 @@ Return ONE JSON object and nothing else (no prose, no markdown fences). It must 
   attack_techniques: a list of MITRE ATT&CK IDs, chosen ONLY from the ALLOWED TECHNIQUE IDS
                      supplied in the user message. Never invent IDs. Use [] if none apply.
   summary: at most 600 characters, plain English, factual, grounded in the alert
-  key_evidence: a list of short strings, each copied VERBATIM from the alert's evidence lines
+  key_evidence: a list of short strings, each copied VERBATIM from the alert's evidence lines,
+                with no abbreviation and no "..." inside a string. For a long evidence line, quote
+                a short, distinctive contiguous substring rather than the whole line (for example
+                "DPT=143" rather than the entire ufw record).
   recommended_next_steps: a list of short imperative steps for a human analyst
 
 RULES
