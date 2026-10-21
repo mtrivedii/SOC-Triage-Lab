@@ -58,12 +58,13 @@ Project plan and working brief. Give this whole file to the assistant at the sta
 | 3 | Project/repo name | `soc-triage-lab` | `soc-triage-lab` |
 | 4 | Python tooling (uv / pip+venv / poetry) | uv (lockfile with hashes) | pip + venv, to keep it simple |
 | 5 | Where does the pipeline run? | Plain Python on Windows (no WSL2: avoids slowing VMware). Most efficient setup | WSL2 Ubuntu on the host (cap WSL at ~4 GB RAM) |
-| 6 | Models for the benchmark | Free-tier models only (names verified in Sprint 0) | DeepSeek V3 (paid credits) + one free model (Gemini free tier); local Ollama model optional |
+| 6 | Models for the benchmark | Free-tier only. No preference, so assistant chose Gemini (AI Studio) + Groq `gpt-oss-120b`; exact IDs confirmed in Sprint 0 | DeepSeek V3 (paid credits) + one free model (Gemini free tier); local Ollama model optional |
 | 7 | GitHub account/handle to use | `mtrivedii` | n/a |
 
 Additional decisions (2026-10-21):
 - **No LiteLLM.** Its PyPI releases 1.82.7 and 1.82.8 were malicious (March 2026 supply-chain attack). Use the official `openai` SDK with each provider's OpenAI-compatible endpoint and a small price table instead.
 - **Git commits carry no co-author or Claude attribution line.**
+- **Last-resort fallback:** my own Claude API key, only if the free tiers can't do the job (for example Groq's daily token cap blocks the evaluation). It is paid, so set a spend cap, log the cost per run, and pin the exact model like any other. Adding it means a new provider entry in `config/providers.toml`; check Anthropic's current docs for the endpoint and structured-output support first.
 - Code is written and pushed to `mtrivedii/soc-triage-lab`; real model calls and anything touching the lab run on my laptop.
 
 ---
@@ -227,7 +228,7 @@ Budgets assume focused hours. Cumulative "core" (Sprints 0-4) is roughly 9-12 ho
 - [x] Create the repo (private for now), add `.gitignore`, `.env.example`, `README` stub, this plan, and `CLAUDE.md`.
 - [x] Create the Python environment with uv on Windows. Pin dependencies via `uv.lock` (`pydantic`, `openai`, `pytest`, `ruff`, `python-dotenv`, `pyyaml`). No LiteLLM.
 - [ ] Add secret scanning (gitleaks pre-commit hook, or at minimum a documented manual check).
-- [ ] Create API keys for two free-tier providers (Google AI Studio plus one more). Store only in `.env`. Verify with a one-line "hello" call through the `openai` SDK.
+- [ ] Create API keys for two free-tier providers (Google AI Studio and Groq). Store only in `.env`. Verify with a one-line "hello" call through the `openai` SDK (`scripts/hello.py`).
 - [ ] Check the current official model names for each provider. They change. Do not guess.
 
 **Done when:** `pytest` runs (even with 1 dummy test), an `openai` SDK call to each model works, and `git log` shows no secrets.
@@ -424,9 +425,9 @@ Pick at most one:
 
 **Still open in Sprint 0 (needs me, on my laptop):**
 - [ ] Snapshot or clone the Kali VM.
-- [ ] Create two free-tier API keys (Google AI Studio plus one more provider), put them only in `.env`.
+- [ ] Create two free-tier API keys (Google AI Studio and Groq), put them only in `.env` (`GEMINI_API_KEY`, `GROQ_API_KEY`).
 - [ ] Check the current official model names, rate limits and OpenAI-compatible endpoints for both providers (do not guess; names change). Record them in config. First pass of notes is in `docs/providers.md` (proposed pair: Gemini + Groq `gpt-oss-120b`; unconfirmed until keys exist).
-- [ ] One-line "hello" call to each model through the `openai` SDK.
+- [ ] One-line "hello" call to each model: `uv run python scripts/hello.py gemini` (lists models), then `... gemini <model-id>`; same for `groq`.
 - [ ] Secrets check (gitleaks pre-commit hook, or documented manual check).
 
 **Next after that:** Sprint 1 (lab and log collection). It needs me to run the VM and attack commands; the assistant only gives commands and expected outcomes.

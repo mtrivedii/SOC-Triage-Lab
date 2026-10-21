@@ -7,8 +7,14 @@ Checked 2026-10-21 against official docs. Limits and model names change; re-chec
 | Provider | Free tier | Endpoint / structured output | Notes |
 |----------|-----------|------------------------------|-------|
 | Google AI Studio (Gemini) | Yes, needs a project, no card | OpenAI-compatible base URL `https://generativelanguage.googleapis.com/v1beta/openai/`. Structured output via Pydantic `response_format` (`client.beta.chat.completions.parse`). | Per-model limits are NOT on the docs page; they show in AI Studio after login. Limits are per project, daily quota resets at midnight Pacific. OpenAI-library support is still labelled beta. Reasoning cannot be turned off on Gemini 3 / 2.5 Pro models. |
-| Groq | Yes, no card | Base URL not yet verified (check docs when creating the key). | Docs table (plan label ambiguous) for `openai/gpt-oss-120b`: 30 RPM, 1K requests/day, 8K tokens/min, 200K tokens/day. The token caps are the real constraint: roughly 70-100 alert-sized calls per day. |
+| Groq | Yes, no card | OpenAI-compatible base URL `https://api.groq.com/openai/v1` (confirmed in Groq docs). Temperature 0 is silently converted to 1e-8; `n` must be 1. | Docs table (plan label ambiguous) for `openai/gpt-oss-120b`: 30 RPM, 1K requests/day, 8K tokens/min, 200K tokens/day. The token caps are the real constraint: roughly 70-100 alert-sized calls per day. |
 | Mistral | Experiment plan, no card but verified phone number needed | Not checked. | Mistral's help page says Experiment-plan API requests may be used to train their models. No limits listed. Backup option only. |
+
+## Decision
+User has no model preference, so the assistant chose Gemini + Groq `openai/gpt-oss-120b` (two different model families, both free, no card). Mistral stays as backup.
+
+## Fallback
+User's own Claude API key, last resort only (paid, not free). Not configured. Check Anthropic's docs before adding it.
 
 ## Status
 - Nothing here has been tested with a real key yet. Model IDs below the "Models" heading must be confirmed with `client.models.list()` once keys exist; do not hard-code from this file.
