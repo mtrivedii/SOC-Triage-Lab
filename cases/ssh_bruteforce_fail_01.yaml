@@ -1,0 +1,14 @@
+case_id: ssh_bruteforce_fail_01
+description: Hydra SSH password guessing from Kali against labuser, correct password NOT in the wordlist
+source: own-lab
+log_files: [data/raw/ssh_bruteforce_fail_01/auth.log]
+window: {start: "2026-10-21T17:07:55Z", end: "2026-10-21T17:08:36Z"}
+expected:
+  verdict: malicious
+  attack_type: ssh_bruteforce
+  techniques: [T1110, T1110.001]
+notes: >-
+  From Kali I ran hydra against SSH as user labuser with a 50-word slice of rockyou that does NOT
+  contain labuser's password, so every attempt fails. This is online SSH password guessing with no
+  successful login, so no valid-account technique applies. sshd's PerSourcePenalties cut the run off
+  partway through, which is itself realistic. Written before any AI, from the scenario as executed.

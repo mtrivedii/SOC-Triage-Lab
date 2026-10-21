@@ -1,0 +1,14 @@
+case_id: benign_browsing_01
+description: A few normal browser GETs to / and /health from Kali
+source: own-lab
+log_files: [data/raw/benign_browsing_01/nginx_access.log]
+window: {start: "2026-10-21T18:32:41Z", end: "2026-10-21T18:32:47Z"}
+expected:
+  verdict: benign
+  attack_type: benign_activity
+  techniques: []
+notes: >-
+  From Kali I made a few ordinary GETs to / and /health with a real browser user-agent; all succeed
+  (200). Ground truth is benign web browsing, no scanning. False-positive control for the web
+  directory-scan detector (low volume, served paths only, non-scanner UA). Written before any AI, from
+  the scenario as executed.

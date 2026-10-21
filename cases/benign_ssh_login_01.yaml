@@ -1,0 +1,13 @@
+case_id: benign_ssh_login_01
+description: Single normal SSH password login as victim from Kali
+source: own-lab
+log_files: [data/raw/benign_ssh_login_01/auth.log]
+window: {start: "2026-10-21T18:28:53Z", end: "2026-10-21T18:28:56Z"}
+expected:
+  verdict: benign
+  attack_type: benign_activity
+  techniques: []
+notes: >-
+  From Kali I performed a single normal SSH login as victim with the correct password: one successful
+  login, no failures. Ground truth is benign. This is a false-positive control for the SSH brute-force
+  detector (a lone legitimate login must not alarm). Written before any AI, from the scenario as executed.

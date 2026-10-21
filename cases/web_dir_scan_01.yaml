@@ -1,0 +1,14 @@
+case_id: web_dir_scan_01
+description: gobuster directory/wordlist scan from Kali against nginx on the target
+source: own-lab
+log_files: [data/raw/web_dir_scan_01/nginx_access.log]
+window: {start: "2026-10-21T17:49:01Z", end: "2026-10-21T17:49:04Z"}
+expected:
+  verdict: malicious
+  attack_type: web_dir_scan
+  techniques: [T1595.003]
+notes: >-
+  From Kali I ran gobuster with the dirb common.txt wordlist against nginx on the target, requesting
+  many paths in a few seconds. Most paths do not exist (404) with a couple of real hits (/ and
+  /health), and the gobuster user-agent is present. Ground truth is malicious web directory/wordlist
+  scanning. Written before any AI, from the scenario as executed.

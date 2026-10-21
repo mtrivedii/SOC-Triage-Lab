@@ -1,0 +1,17 @@
+case_id: mixed_bruteforce_and_browsing_01
+description: SSH password guessing against labuser (failures only) running concurrently with benign browsing, from Kali
+source: own-lab
+log_files:
+  - data/raw/mixed_bruteforce_and_browsing_01/auth.log
+  - data/raw/mixed_bruteforce_and_browsing_01/nginx_access.log
+window: {start: "2026-10-21T18:36:01Z", end: "2026-10-21T18:36:46Z"}
+expected:
+  verdict: malicious
+  attack_type: ssh_bruteforce
+  techniques: [T1110, T1110.001]
+notes: >-
+  From Kali I ran two things in the same window: an SSH password-guessing attack against labuser
+  (failures only, correct password not in the list) and, concurrently, a handful of ordinary browser
+  GETs to /. Ground truth is malicious because of the SSH brute force; the web browsing is benign noise
+  that must not change the verdict. A mixed-window test for keeping the attack signal separate from
+  benign traffic. Written before any AI, from the scenario as executed.

@@ -1,0 +1,14 @@
+case_id: benign_health_monitor_01
+description: A monitoring loop polling /health repeatedly from Kali (false-positive trap)
+source: own-lab
+log_files: [data/raw/benign_health_monitor_01/nginx_access.log]
+window: {start: "2026-10-21T18:33:51Z", end: "2026-10-21T18:34:53Z"}
+expected:
+  verdict: benign
+  attack_type: benign_activity
+  techniques: []
+notes: >-
+  From Kali I ran a monitoring loop that polls /health repeatedly, a few seconds apart, with a monitor
+  user-agent. High request volume but a single existing path, all 200. Ground truth is benign
+  monitoring. A deliberate false-positive trap: a volume-only web rule would alarm here, a
+  distinct-path / 404-based detector should not. Written before any AI, from the scenario as executed.

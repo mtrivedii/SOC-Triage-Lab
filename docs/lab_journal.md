@@ -151,3 +151,11 @@ Observations that affect the parser and detectors:
 - Expected: MIXED window (ground truth = malicious): an SSH brute force against labuser (rockyou top-50, correct password NOT in list, failures only) running CONCURRENTLY with benign browser GETs to /, all from Kali (192.168.214.130). auth.log should show many Failed password for labuser; nginx should show a handful of benign 200s. The detector must flag the SSH brute force while the web browsing is benign noise in the same window.
 - Attack exit code: 0. auth.log lines in window (approx): 183
 - Logs copied to: data/raw/mixed_bruteforce_and_browsing_01/ (auth.log, ufw.log, nginx_access.log, attack_output.txt)
+
+## ufw logging completeness — caveat (not a confirmed rule)
+We have only two data points on how much of a scan reaches ufw.log: the `-T4` calibration (~40% of
+scanned ports logged) and `port_scan_01` at default `-T3` (~100%). That is an observation, not a
+confirmed rule, and the cause (kernel/rsyslog rate limiting at higher speed) is unverified. The
+port-scan detector must therefore NOT assume logs are either complete or incomplete: key on "many
+distinct destination ports from one source in a short window" with thresholds well below the full port
+count, and treat the log as possibly partial.

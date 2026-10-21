@@ -1,0 +1,15 @@
+case_id: port_scan_01
+description: Full-range TCP SYN scan (nmap -sS -p-) from Kali against the target
+source: own-lab
+log_files: [data/raw/port_scan_01/ufw.log]
+window: {start: "2026-10-21T17:45:28Z", end: "2026-10-21T17:47:20Z"}
+expected:
+  verdict: malicious
+  attack_type: port_scan
+  techniques: [T1046]
+notes: >-
+  From Kali I ran a full-range TCP SYN scan (nmap -sS -p-, all 65535 ports) against the target. ufw
+  denies all inbound except 22 and 80, so the scan produces blocked connection attempts to a large
+  number of distinct destination ports from a single source. Ground truth is malicious network service
+  discovery / port scan. This is the one full-range reference capture; later scan cases are bounded.
+  Written before any AI, from the scenario as executed.

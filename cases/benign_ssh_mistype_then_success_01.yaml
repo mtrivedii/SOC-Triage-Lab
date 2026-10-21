@@ -1,0 +1,14 @@
+case_id: benign_ssh_mistype_then_success_01
+description: A user mistypes the SSH password a few times then logs in, from Kali
+source: own-lab
+log_files: [data/raw/benign_ssh_mistype_then_success_01/auth.log]
+window: {start: "2026-10-21T18:31:05Z", end: "2026-10-21T18:31:17Z"}
+expected:
+  verdict: benign
+  attack_type: benign_activity
+  techniques: []
+notes: >-
+  From Kali I logged in as victim after mistyping the password a few times first: a small number of
+  failures immediately followed by a success, same source. Ground truth is benign - a user fumbling
+  their own password, not an attack. Control for the brute-force detector's failure threshold (a few
+  failures plus a success must not be flagged). Written before any AI, from the scenario as executed.

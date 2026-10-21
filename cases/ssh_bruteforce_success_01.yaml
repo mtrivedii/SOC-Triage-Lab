@@ -1,0 +1,14 @@
+case_id: ssh_bruteforce_success_01
+description: Hydra SSH password guessing from Kali against victim, correct password present at the end of the wordlist
+source: own-lab
+log_files: [data/raw/ssh_bruteforce_success_01/auth.log]
+window: {start: "2026-10-21T17:36:47Z", end: "2026-10-21T17:37:17Z"}
+expected:
+  verdict: malicious
+  attack_type: ssh_bruteforce
+  techniques: [T1110, T1110.001, T1078, T1021.004]
+notes: >-
+  From Kali I ran hydra against SSH as the throwaway user victim with a rockyou slice that ends on
+  victim's real password, so a series of failures is followed by one successful login. Ground truth is
+  malicious: online password guessing that ends in a valid-account SSH login. Written before any AI,
+  from the scenario as executed.
