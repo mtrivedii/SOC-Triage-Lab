@@ -93,3 +93,12 @@ Observations that affect the parser and detectors:
 - Expected: Full TCP SYN port scan (nmap -sS -p-, all 65535 ports) from Kali against the target. Expect ufw.log to show many distinct blocked destination ports from one source (192.168.214.130); per the earlier calibration, ufw logs only a fraction of scanned ports, so the distinct-port count is reported from this run, not assumed.
 - Attack exit code: 0. auth.log lines in window (approx): 16
 - Logs copied to: data/raw/port_scan_01/ (auth.log, ufw.log, nginx_access.log, attack_output.txt)
+
+## web_dir_scan_01 (2026-10-21T17:49:01Z UTC)
+- Target: ubuntu-target @ 192.168.214.129 (verified). Kali: kali@192.168.214.130. Logs via adm-group read (no password).
+- Window (target clock, UTC): start=2026-10-21T17:49:01Z end=2026-10-21T17:49:04Z
+- Clock check: target=2026-10-21T17:49:00Z kali=2026-10-21T17:49:00Z
+- Attack (from Kali): `gobuster dir -u http://192.168.214.129 -w /usr/share/wordlists/dirb/common.txt -t 20`
+- Expected: Web directory/wordlist scan with gobuster (dirb common.txt, 20 threads) from Kali against nginx on the target. Expect many HTTP requests from 192.168.214.130 in nginx access.log, mostly 404s, with a few hits for whatever nginx actually serves (e.g. / and /health). Maps to T1595.003 (Wordlist Scanning).
+- Attack exit code: 0. auth.log lines in window (approx): 24
+- Logs copied to: data/raw/web_dir_scan_01/ (auth.log, ufw.log, nginx_access.log, attack_output.txt)
