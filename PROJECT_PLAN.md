@@ -237,6 +237,9 @@ Budgets assume focused hours. Cumulative "core" (Sprints 0-4) is roughly 9-12 ho
 ### Sprint 1: Lab and log collection (about 2-3 h)
 **Goal:** real logs from real attacks on my own VM.
 - [ ] Build the Ubuntu Server VM (1 vCPU, about 1.5 GB RAM). Both VMs on a host-only network. Confirm the target is **not** reachable from the home network.
+  - **Two-phase network (gap in the original plan):** a host-only network has no internet, but the target needs `apt` for nginx, ufw, rsyslog and updates. Phase A: install and update on NAT. Phase B: switch the adapter to host-only, then verify isolation and take a snapshot. All attacks happen in Phase B.
+  - Target: Ubuntu Server 26.04.1 LTS live-server amd64 ISO (listing checked 2026-10-21 on an official Ubuntu release mirror), hostname `ubuntu-target`, normal user `labuser`. Verify the ISO checksum. Snapshot after Phase B as `clean-base` to reset between scenarios.
+  - Kali for the lab is a clone; the original Kali stays untouched for HTB.
 - [ ] On the target: install and enable `openssh-server`, `nginx`, `rsyslog`, `ufw`. Set ufw default deny incoming, allow 22 and 80, turn logging on. Create a normal user with a known password for the brute-force test (**lab-only password, never reused anywhere**).
 - [ ] **Inspect the actual log formats first** (auth log timestamp style, nginx format, ufw lines). Do not assume. Record samples in `docs/lab_journal.md`.
 - [ ] Keep a lab journal: for every scenario, write the start/end time, the exact command, and what I expected.
