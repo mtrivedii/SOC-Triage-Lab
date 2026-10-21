@@ -159,3 +159,19 @@ confirmed rule, and the cause (kernel/rsyslog rate limiting at higher speed) is 
 port-scan detector must therefore NOT assume logs are either complete or incomplete: key on "many
 distinct destination ports from one source in a short window" with thresholds well below the full port
 count, and treat the log as possibly partial.
+
+## v1 prompt frozen (2026-10-22)
+Prompt `v1` frozen at sha256 `ec891d09445e9d3399333ee41034d7b15d667fc28f69cbcc544e528156a71b91`. No
+further prompt edits before Sprint 4. Pre-freeze read of live outputs covered
+`ssh_bruteforce_success_01` (groq + gemini), `mixed_bruteforce_and_browsing_01`, and `port_scan_01`
+(groq).
+
+**Accepted guardrail behaviours (NOT bugs — a nonzero flag rate is expected, especially on port-scan
+cases):**
+- `unverifiable_evidence` fires when the model quotes a short but NON-CONTIGUOUS fragment (e.g. joining
+  `SRC=...` and `DPT=...` from one ufw line). The verbatim-substring check correctly rejects it.
+- `ungrounded_numbers` fires when the model cites values that live only in evidence (e.g. individual
+  scanned ports), because numeric grounding deliberately trusts only structured alert fields (counts,
+  src_ip, target_host, usernames, first_seen/last_seen).
+Read Sprint 4's guardrail-flag counts with these two documented, accepted sources in mind — they are
+real guardrail catches, not a sign something broke.
