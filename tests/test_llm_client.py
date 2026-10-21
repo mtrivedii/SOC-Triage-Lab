@@ -3,7 +3,9 @@
 import json
 import types
 
-from triage.llm.client import build_messages, triage, triage_call
+import pytest
+
+from triage.llm.client import build_messages, make_client, triage, triage_call
 from triage.llm.schema import InvalidResult, TriageResult
 
 VALID = json.dumps({
@@ -93,6 +95,49 @@ def test_triage_call_captures_tokens_and_latency():
 def test_triage_call_usage_none_when_absent():
     call = triage_call(ALERT, "test-model", fake_client([VALID]), "sys", ["T1110"])
     assert call.tokens_in is None and call.tokens_out is None
+
+
+def test_triage_call_notifies_before_each_attempt():
+    messages = []
+    client = fake_client(["{bad json", VALID])  # invalid then valid -> two attempts
+    call = triage_call(ALERT, "m", client, "sys", ["T1110"], notify=messages.append)
+    assert isinstance(call.result, TriageResult)
+    assert len(messages) == 2
+    assert all("calling model" in m for m in messages)
+
+
+def test_triage_call_propagates_timeout_without_hanging():
+    messages = []
+
+    def create(**kwargs):
+        raise TimeoutError("request timed out")
+
+    client = types.SimpleNamespace(
+        chat=types.SimpleNamespace(completions=types.SimpleNamespace(create=create))
+    )
+    with pytest.raises(TimeoutError):
+        triage_call(ALERT, "m", client, "sys", ["T1110"], notify=messages.append)
+    assert len(messages) == 1  # notified once, then the request failed
+
+
+def test_make_client_sets_explicit_timeout(monkeypatch):
+    import dotenv
+    import openai
+
+    captured = {}
+
+    def fake_openai(**kwargs):
+        captured.update(kwargs)
+        return object()
+
+    monkeypatch.setattr(openai, "OpenAI", fake_openai)
+    monkeypatch.setattr(dotenv, "load_dotenv", lambda *a, **k: None)
+    monkeypatch.setenv("GROQ_API_KEY", "dummy-key")
+
+    make_client("groq", timeout=240)
+    assert captured["timeout"] == 240
+    assert captured["api_key"] == "dummy-key"
+    assert captured["base_url"].startswith("https://")
 
 
 def test_build_messages_wraps_evidence_and_keeps_facts_trusted():

@@ -12,6 +12,7 @@ import json
 import os
 import time
 import tomllib
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -21,6 +22,10 @@ from triage.llm.prompts import load_prompt
 from triage.llm.schema import InvalidResult, TriageResult, parse_triage
 
 ROOT = Path(__file__).resolve().parents[3]
+
+# Explicit request timeout so a stuck call (e.g. a slow Gemini request) fails cleanly
+# with a timeout error instead of hanging on library/OS defaults.
+DEFAULT_TIMEOUT_S = 240.0
 
 
 def _load_toml(name: str) -> dict:
@@ -82,10 +87,13 @@ def triage_call(
     allowed_techniques: list[str],
     temperature: float = 0.0,
     max_retries: int = 1,
+    notify: Callable[[str], None] | None = None,
 ) -> CallResult:
     """Call the model, validate, retry once on invalid output, and capture metrics
     (tokens, latency, attempts, raw response). ``client`` must expose
-    ``chat.completions.create`` like the OpenAI SDK; tests inject a fake.
+    ``chat.completions.create`` like the OpenAI SDK; tests inject a fake. ``notify``, if
+    given, is called with a short status string before each request (so a slow call does
+    not look frozen). A request timeout raised by the client propagates unchanged.
     """
     messages = build_messages(system_prompt, alert, allowed_techniques)
     raw = ""
@@ -97,6 +105,8 @@ def triage_call(
     start = time.perf_counter()
     for _ in range(max_retries + 1):
         attempts += 1
+        if notify is not None:
+            notify(f"calling model {model} (attempt {attempts})...")
         resp = client.chat.completions.create(
             model=model, messages=messages, temperature=temperature
         )
@@ -129,9 +139,9 @@ def triage(
     ).result
 
 
-def make_client(provider: str):  # pragma: no cover - live use only
-    """Build a real OpenAI-SDK client for a provider. Reads the key from .env. Not
-    used by tests; only on the operator's machine for live runs.
+def make_client(provider: str, timeout: float = DEFAULT_TIMEOUT_S):
+    """Build a real OpenAI-SDK client for a provider, with an explicit request timeout.
+    Reads the key from .env. Only used for live runs on the operator's machine.
     """
     import openai
     from dotenv import load_dotenv
@@ -141,7 +151,7 @@ def make_client(provider: str):  # pragma: no cover - live use only
     key = os.environ.get(providers["api_key_env"])
     if not key:
         raise RuntimeError(f"{providers['api_key_env']} not set in .env")
-    return openai.OpenAI(api_key=key, base_url=providers["base_url"])
+    return openai.OpenAI(api_key=key, base_url=providers["base_url"], timeout=timeout)
 
 
 def run_triage(alert: dict, provider: str, allowed_techniques: list[str], version: str = "v1"):

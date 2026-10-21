@@ -86,9 +86,16 @@ def main(argv: list[str] | None = None) -> int:
         f"prompt {args.version} ({ph[:12]}), runs={args.runs}"
     )
     print(f"Alert: {alert.rule_id} src={alert.src_ip} counts={alert.counts}")
+    print("Note: a call can take a few minutes (especially gemini); progress prints per attempt.")
     for i in range(args.runs):
         call = triage_call(
-            alert.to_dict(), model, client, prompt, list(allow), temperature=args.temperature
+            alert.to_dict(),
+            model,
+            client,
+            prompt,
+            list(allow),
+            temperature=args.temperature,
+            notify=lambda msg, i=i: print(f"  [run {i}] {msg}", flush=True),
         )
         report = check(call.result, alert, allow) if isinstance(call.result, TriageResult) else None
         record = build_record(
