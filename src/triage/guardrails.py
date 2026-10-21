@@ -49,10 +49,29 @@ class GuardrailReport:
 
 
 def _alert_text(alert: Alert) -> str:
+    """Blob used for IP containment (evidence included: an IP the model cites should
+    appear verbatim in the alert or its evidence)."""
     parts = [alert.src_ip or "", alert.target_host or "", *alert.evidence_lines]
     parts += [str(v) for v in alert.counts.values()]
     parts += list(alert.usernames_seen)
     return " ".join(parts)
+
+
+def _trusted_numbers(alert: Alert) -> set[str]:
+    """Whole-token numbers from the TRUSTED structured fields only. Evidence lines are
+    deliberately excluded: their raw timestamps and ports contain so many digit runs that
+    almost any 1-3 digit number would ground by coincidence (how a wrong count like 27
+    slipped past). first_seen/last_seen are also excluded for the same reason.
+    """
+    numbers: set[str] = set()
+    for value in alert.counts.values():
+        if isinstance(value, bool):  # bool is an int subclass; skip flags like scanner_ua
+            continue
+        if isinstance(value, int):
+            numbers.add(str(value))
+    for text in [alert.src_ip or "", alert.target_host or "", *alert.usernames_seen]:
+        numbers.update(_NUM.findall(text))
+    return numbers
 
 
 def check(result: TriageResult, alert: Alert, allowlist: dict[str, str]) -> GuardrailReport:
@@ -65,7 +84,11 @@ def check(result: TriageResult, alert: Alert, allowlist: dict[str, str]) -> Guar
 
     text = _alert_text(alert)
     ungrounded_ips = sorted({ip for ip in _IP.findall(result.summary) if ip not in text})
-    ungrounded_numbers = sorted({n for n in _NUM.findall(result.summary) if n not in text})
+
+    grounded_numbers = _trusted_numbers(alert)
+    ungrounded_numbers = sorted(
+        {n for n in _NUM.findall(result.summary) if n not in grounded_numbers}
+    )
 
     floor = alert.severity_floor
     disagrees = (

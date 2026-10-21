@@ -77,6 +77,44 @@ def test_model_benign_on_high_floor_flags_disagreement():
     assert rep.final_severity == "high"  # model cannot lower the floor
 
 
+def test_wrong_count_in_summary_is_ungrounded_regression():
+    # Real Gemini output on ssh_bruteforce_success_01: it wrote "27 failed" but the alert's
+    # true count is 28. The old substring grounding matched "27" inside an evidence port
+    # (e.g. 32271) and wrongly PASSed. Numbers now ground against trusted fields only.
+    alert = _alert(
+        counts={"failed": 28, "accepted": 1},
+        usernames_seen=["victim"],
+        evidence_lines=[
+            (
+                "2026-10-21T17:36:49.111111+00:00 ubuntu-target sshd-session[3800]: "
+                "Failed password for victim from 192.168.214.130 port 32271 ssh2"
+            ),
+            (
+                "2026-10-21T17:37:13.977340+00:00 ubuntu-target sshd-session[3848]: "
+                "Accepted password for victim from 192.168.214.130 port 36580 ssh2"
+            ),
+        ],
+    )
+    result = _result(
+        summary="There were 27 failed login attempts from 192.168.214.130 before a success.",
+        key_evidence=["Accepted password for victim from 192.168.214.130"],
+    )
+    rep = guardrails.check(result, alert, ALLOWLIST)
+    assert "27" in rep.ungrounded_numbers
+    assert not rep.passed
+
+
+def test_correct_count_in_summary_is_grounded():
+    # The matching positive: the true count 28 grounds cleanly.
+    alert = _alert(counts={"failed": 28, "accepted": 1}, usernames_seen=["victim"])
+    result = _result(
+        summary="There were 28 failed login attempts from 192.168.214.130 before a success.",
+        key_evidence=["Failed password for labuser from 192.168.214.130"],
+    )
+    rep = guardrails.check(result, alert, ALLOWLIST)
+    assert rep.ungrounded_numbers == []
+
+
 def test_load_allowlist_from_repo():
     allow = guardrails.load_allowlist()
     assert "T1110" in allow and "T1046" in allow
