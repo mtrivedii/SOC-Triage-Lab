@@ -39,3 +39,8 @@ Done instead of a gitleaks hook (Sprint 0 cut list). Re-run in Sprint 7 before g
 - https://ai.google.dev/gemini-api/docs/openai
 - https://console.groq.com/docs/rate-limits
 - https://help.mistral.ai/en/articles/455206-how-can-i-try-the-api-for-free-with-the-experiment-plan
+
+## Rate limits (recorded 2026-10-21)
+- Groq `openai/gpt-oss-120b`: 30 RPM, 1,000 RPD, 8K TPM, 200K TPD. Source: Groq docs table (https://console.groq.com/docs/rate-limits), which does not clearly say which plan it describes. A third-party summary gave the same numbers.
+- Gemini `gemini-3.8-flash`: NOT CONFIRMED. A community tracker (via a third-party summary) suggests roughly 10 RPM and 1,500 RPD, but Google's docs say real limits are per project and shown only at https://aistudio.google.com/rate-limit. TODO: record the real numbers from there.
+- Google reserves the right to use free-tier prompts to train its products. Lab-only data, so acceptable.
