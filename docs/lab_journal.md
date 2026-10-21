@@ -52,3 +52,10 @@ Observations that affect the parser and detectors:
 - Target: `Etc/UTC`. Kali clone: `America/New_York` (EDT, -0400) at first check. UTC time was identical on both (16:17:04 UTC on Kali vs target log times around 16:15 UTC), so the clocks are in sync and only the display timezone differed.
 - Decision: set Kali to UTC (`sudo timedatectl set-timezone UTC`). All journal times and case windows are written in UTC.
 - Open: host-only network has no NTP. Re-compare clocks (`date -u` on both) at the start of each scenario session, since case windows depend on them.
+
+## Phase B: host-only network and isolation check (2026-10-21, ~16:20 UTC)
+- Both VMs moved to VMware host-only. Subnet 192.168.214.0/24. Target `ubuntu-target` = 192.168.214.129, lab Kali clone = 192.168.214.130, host adapter = 192.168.214.1. IPs come from DHCP and may change after a restart; re-check with `ip -br a`.
+- Target isolation verified: `ip route` shows no default route; `ping 1.1.1.1` -> "Network is unreachable"; `curl -m 5 -sI https://example.com` returned nothing (failed).
+- Kali -> target ping works (2/2, ~1 ms).
+- ufw logging level set to `high` (to avoid rate limiting of blocked packets). Not yet confirmed with `ufw status verbose`.
+- Next: take `clean-base` snapshots (target and Kali clone), then run a calibration scan to measure how many ufw log lines a scan produces.
