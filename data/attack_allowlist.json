@@ -1,0 +1,15 @@
+{
+  "_comment": "Curated ATT&CK allow-list for this lab. Technique IDs the model may emit; anything outside this set is flagged as hallucinated (plan 4.2). IDs and names verified against https://attack.mitre.org.",
+  "verified_against": "https://attack.mitre.org",
+  "verified_date": "2026-10-21",
+  "techniques": {
+    "T1110": "Brute Force",
+    "T1110.001": "Brute Force: Password Guessing",
+    "T1078": "Valid Accounts",
+    "T1021.004": "Remote Services: SSH",
+    "T1046": "Network Service Discovery",
+    "T1595.002": "Active Scanning: Vulnerability Scanning",
+    "T1595.003": "Active Scanning: Wordlist Scanning",
+    "T1190": "Exploit Public-Facing Application"
+  }
+}
