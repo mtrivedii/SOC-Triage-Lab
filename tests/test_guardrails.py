@@ -149,6 +149,51 @@ def test_correct_count_in_summary_is_grounded():
     assert rep.ungrounded_numbers == []
 
 
+def test_v2_ipv4_version_timestamp_pieces_not_flagged():
+    alert = _alert(first_seen="2026-10-21T17:36:52+00:00", last_seen="2026-10-21T17:37:15+00:00")
+    result = _result(
+        summary="From 192.168.214.130 at 17:37:13 via gobuster/3.8.2; 48 failed logins.",
+        key_evidence=["Failed password for labuser from 192.168.214.130"],
+    )
+    rep = guardrails.check(result, alert, ALLOWLIST, version=2)
+    assert rep.ungrounded_numbers == []  # octets, clock pieces, version fragments all tokenised
+    assert rep.evidence_only_numbers == []
+    assert rep.checker_version == 2
+
+
+def test_v2_evidence_only_number_gets_soft_flag_not_hard():
+    alert = _alert(
+        evidence_lines=["2026-10-21 kernel: [UFW BLOCK] SRC=192.168.214.130 PROTO=TCP DPT=143 SYN"],
+    )
+    result = _result(summary="The scan hit port 143 among others.", key_evidence=["DPT=143"])
+    rep = guardrails.check(result, alert, ALLOWLIST, version=2)
+    assert rep.evidence_only_numbers == ["143"]
+    assert rep.ungrounded_numbers == []
+    assert rep.passed  # evidence_only is informational, not a hard failure
+
+
+def test_v2_duration_within_one_second_is_grounded():
+    alert = _alert(first_seen="2026-10-21T18:36:10+00:00", last_seen="2026-10-21T18:36:45+00:00")
+    result = _result(
+        summary="48 failed logins within a 35-second window.",
+        key_evidence=["Failed password for labuser from 192.168.214.130"],
+    )
+    rep = guardrails.check(result, alert, ALLOWLIST, version=2)
+    assert "35" not in rep.ungrounded_numbers
+    assert "35" not in rep.evidence_only_numbers
+
+
+def test_v2_invented_number_still_flagged():
+    alert = _alert(first_seen="2026-10-21T18:36:10+00:00", last_seen="2026-10-21T18:36:45+00:00")
+    result = _result(
+        summary="There were 9999 failed logins.",
+        key_evidence=["Failed password for labuser from 192.168.214.130"],
+    )
+    rep = guardrails.check(result, alert, ALLOWLIST, version=2)
+    assert rep.ungrounded_numbers == ["9999"]
+    assert not rep.passed
+
+
 def test_load_allowlist_from_repo():
     allow = guardrails.load_allowlist()
     assert "T1110" in allow and "T1046" in allow
