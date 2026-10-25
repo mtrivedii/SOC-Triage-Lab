@@ -324,6 +324,7 @@ Budgets assume focused hours. Cumulative "core" (Sprints 0-4) is roughly 9-12 ho
   - the severity-floor and rule-disagreement logic (the AI can't downgrade a rule-based alert)
   - output validation (schema, allow-list, grounding)
 - [ ] Report honestly: which defences helped, which didn't, what remains open. "Not fully solved" is an acceptable and credible conclusion.
+- [ ] Checker v2: stop flagging status codes, IP octets, version numbers and computed durations; re-score saved v1 runs offline with v1 and v2 checkers and report both. (Carried from Sprint 4's known measurement issues — fixing the checker only after v1 scores are frozen avoids tuning the measurement to the outcome.)
 
 **Done when:** a before/after table exists, tests for the injection cases are in the repo, and the threat model is written.
 **Cut list:** reduce the number of injection variants. Do not drop the before/after measurement.
@@ -417,13 +418,14 @@ Pick at most one:
 | 2026-10-22 | 3 (AI layer, frozen) | LLM schema/guardrails/client + `prompts/v1.txt`, all mock-tested; per-call run logging (`runlog.py`, `results/runs.jsonl`) + `scripts/triage_once.py`; numeric grounding hardened (trusted-only, whole-token, commas, first_seen/last_seen); **v1 frozen at `ec891d0945…` on 2026-10-22** after live pre-freeze read | live multi-run eval not yet run (needs operator) | Sprint 4: run `scripts/triage_batch.py` live (≥3×/case/provider), then `eval/triage_eval.py` offline for the table. Expect nonzero guardrail-flag rate on port-scan cases (two accepted sources, see journal) |
 | 2026-10-22 | 4 (eval, in progress) | Live batch runner (`scripts/triage_batch.py`) + offline scorer (`eval/triage_eval.py`). **Groq 3 runs/alert done** (15 valid, frozen hash) in `results/runs.jsonl`; scorer filters to the frozen prompt hash. Gemini batch hit the free-tier cap (20 req/day) after 1 run; runner hardened to catch 429/API errors and keep going | **Demo scale decision:** Groq 3 runs/alert, Gemini 2 runs/alert because Gemini free tier = 20 req/day (plan cut list "2 runs if budget tight"); documented as a limitation, not a full benchmark | Gemini 2 runs/alert when quota resets; then Sprint 4 interpretation vs the detector baseline |
 | 2026-10-25 | 4 (audit) | Read-only audit (`docs/audit_2026-10-25.md`): `uv sync --frozen` clean, 78 tests pass, ruff clean, frozen prompt hash matches, secrets clean (45 commits), both VMs have `clean-base`. Confirmed 5 detector alerts/pass; Groq complete, Gemini under-covered (1 frozen run) | — | Run the Gemini batch, score, then write the interpretation |
+| 2026-10-25 | 4 (done) | 25 frozen-prompt runs scored (Groq 15, Gemini 10); eval reports technique overlap as counts + raw JSON; findings written in `docs/sprint4_findings.md` (verdict/type 25/25; ATT&CK exact only 9/25; guardrail flags 15/25, all checker false-alarms or by-design evidence-only citations, no hallucinations) | Gemini at 1-3 runs/alert instead of 3 (free-tier 20 req/day cap + one transient 503), not full 3x | Sprint 5: prompt-injection testing; also checker v2 + re-score saved runs |
 
 **Label changes after seeing results (must be listed here):** none yet.
 ---
 
 ## 11. Current state / handoff (read this when starting a new chat)
 
-**Last updated:** 2026-10-25. **Current sprint:** 4 (evaluation), in progress.
+**Last updated:** 2026-10-25. **Current sprint:** 5 (prompt-injection testing). Sprint 4 (evaluation) is done — see `docs/sprint4_findings.md`.
 
 **How to resume in a new chat:** give the assistant `PROJECT_PLAN.md` and `CLAUDE.md` from this repo (`mtrivedii/soc-triage-lab`, private). Then confirm the sprint from the Progress Log and continue.
 
@@ -431,12 +433,12 @@ Pick at most one:
 - Sprints 0-3 done. Pipeline built and tested end to end: parsers (auth/nginx/ufw), detectors (ssh/port/web), alert schema, LLM layer (schema, guardrails, client, run logging), and prompt `v1` **frozen at `ec891d09445e9d3399333ee41034d7b15d667fc28f69cbcc544e528156a71b91`**.
 - Health: `uv sync --frozen` clean; `uv run pytest -q` 78 pass; `uv run ruff check .` clean.
 - Detector-only baseline: **5/5 malicious detected, 0/4 benign false alarms** (`results/detector_baseline.md`). The 9 cases produce **5 alerts** (one per malicious case; benign cases raise none) — those 5 are the only inputs ever sent to an LLM.
-- Sprint 4 eval: **Groq 3 runs/alert done** (15 valid runs, frozen hash). **Gemini** being filled to 2 runs/alert. Raw per-call records in `results/runs.jsonl`; scored table in `results/eval_summary.md` (scorer filters to the frozen hash); pre-freeze prompt-check runs set aside in `results/runs_prefreeze.jsonl` (excluded from scoring by hash). Read-only audit: `docs/audit_2026-10-25.md`.
+- Sprint 4 eval **done**: 25 frozen-prompt runs scored (Groq 15, Gemini 10). Verdict/attack-type 25/25 correct; ATT&CK exact only 9/25; guardrail flags 15/25 (all checker false-alarms or by-design evidence-only citations, no hallucinations). Interpretation + free-tier limits + known measurement issues: `docs/sprint4_findings.md`. Raw per-call records in `results/runs.jsonl`; table in `results/eval_summary.md` (+ `eval_summary.json`, scorer filters to the frozen hash); pre-freeze runs set aside in `results/runs_prefreeze.jsonl`; read-only audit in `docs/audit_2026-10-25.md`.
 - **Demo-scale decision:** Groq 3 runs/alert, Gemini 2 runs/alert, because Gemini free tier = 20 requests/day (observed 2026-10-22). This is the plan's cut-list ("2 runs if budget tight") and is documented as a project limitation, not a full benchmark.
 - Secrets: clean across the working tree and all 45 commits; `.env` never committed; `attack_output.txt` (holds the lab password) git-ignored.
 
 **Lab:** the analysis phase runs entirely off the saved logs in `data/raw/`, so the VMs are not needed and should be shut down for it (both were still running at the 2026-10-25 audit; no VM actions were taken this session). **Sprint 5 (prompt-injection testing) needs the lab VMs again** — target `ubuntu-target` (192.168.214.129) + lab Kali (192.168.214.130) on the host-only net, `clean-base` on both, lab key `~/.ssh/lab_ed25519`. Full lab/snapshot/credential details are in the Progress Log and `docs/lab_journal.md`.
 
-**Next:** finish the Gemini runs, then write the Sprint 4 interpretation vs the detector baseline (verdict/attack-type accuracy, technique precision/recall, guardrail-flag rate, invalid-output rate, cost/tokens; report the run-to-run spread). Known technique-mapping errors to call out: web scan tagged `T1046` (groq, 3/3) instead of `T1595.003`; `port_scan` adds `T1595.002`; `ssh_bruteforce_fail` sometimes adds `T1021.004`.
+**Next (Sprint 5, needs the lab VMs back ON, started from `clean-base`):** prompt-injection testing. Generate real injection cases — an SSH login whose **username contains an injection string** (so it lands in `auth.log` naturally), plus **web requests with injection text in the path and user-agent** — then measure attack success before/after defences, per model, and write `docs/threat_model.md`. Offline companion task (no lab needed): **checker v2** (stop flagging status codes, IP octets, version numbers, computed durations) and **re-score the saved v1 runs with both checker versions**, reporting before/after. Both VMs were left running at the audit; confirm `vmrun listSnapshots` shows `clean-base` on each before starting.
 
 **Quick start:** `uv sync`, then `uv run pytest -q` and `uv run ruff check .`. Model check: `uv run python scripts/hello.py <gemini|groq> [model-id]`.
