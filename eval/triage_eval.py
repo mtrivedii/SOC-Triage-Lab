@@ -60,6 +60,9 @@ def score_run(record: dict, expected: dict) -> dict:
         "attack_type_correct": False,
         "tech_precision": None,
         "tech_recall": None,
+        "tech_found": None,
+        "tech_extra": None,
+        "tech_expected": len(expected.get("techniques") or []),
         "guardrail_flagged": False,
         "hallucinated": 0,
         "tokens": (record.get("tokens_in") or 0) + (record.get("tokens_out") or 0),
@@ -76,6 +79,8 @@ def score_run(record: dict, expected: dict) -> dict:
         tp = len(pred & exp)
         out["tech_precision"] = tp / len(pred) if pred else None
         out["tech_recall"] = tp / len(exp) if exp else None
+        out["tech_found"] = tp  # expected IDs correctly produced
+        out["tech_extra"] = len(pred - exp)  # non-expected IDs produced
 
     guard = record.get("guardrails") or {}
     out["guardrail_flagged"] = any(guard.get(k) for k in _GUARDRAIL_KEYS)
@@ -101,6 +106,9 @@ def summarize(records: list[dict], cases: dict[str, dict]) -> list[dict]:
     for (case_id, provider), scored in sorted(groups.items()):
         n = len(scored)
         n_valid = sum(s["valid"] for s in scored)
+        exp_total = len(cases[case_id]["expected"].get("techniques") or [])
+        found = [s["tech_found"] for s in scored if s["tech_found"] is not None]
+        extra = [s["tech_extra"] for s in scored if s["tech_extra"] is not None]
         summary.append(
             {
                 "case_id": case_id,
@@ -112,6 +120,12 @@ def summarize(records: list[dict], cases: dict[str, dict]) -> list[dict]:
                 "verdict_correct": sum(s["verdict_correct"] for s in scored),
                 "abstained": sum(s["abstained"] for s in scored),
                 "attack_type_correct": sum(s["attack_type_correct"] for s in scored),
+                # counts for display (spread across runs); raw decimals kept for JSON
+                "tech_expected": exp_total,
+                "tech_found_min": min(found) if found else None,
+                "tech_found_max": max(found) if found else None,
+                "tech_extra_min": min(extra) if extra else None,
+                "tech_extra_max": max(extra) if extra else None,
                 "tech_precision": _mean([s["tech_precision"] for s in scored]),
                 "tech_recall": _mean([s["tech_recall"] for s in scored]),
                 "guardrail_flagged": sum(s["guardrail_flagged"] for s in scored),
@@ -121,6 +135,12 @@ def summarize(records: list[dict], cases: dict[str, dict]) -> list[dict]:
             }
         )
     return summary
+
+
+def _range(lo, hi) -> str:
+    if lo is None:
+        return "-"
+    return str(lo) if lo == hi else f"{lo}-{hi}"
 
 
 def render_markdown(
@@ -138,23 +158,29 @@ def render_markdown(
     )
     header = (
         "| case | expected | provider | runs | valid | verdict ok | abstain | type ok | "
-        "tech P | tech R | guardrail-flagged | mean tok | mean $ |"
+        "tech found | tech extra | guardrail-flagged | mean tok | mean $ |"
     )
     divider = (
         "|------|----------|----------|------|-------|------------|---------|---------|"
-        "--------|--------|-------------------|----------|--------|"
+        "------------|------------|-------------------|----------|--------|"
     )
     lines = ["# LLM triage eval (vs detector-only baseline)", "", intro]
     if prompt_note:
         lines += ["", prompt_note]
-    lines += ["", header, divider]
+    tech_note = (
+        "`tech found` = expected ATT&CK IDs the model produced, out of the ground-truth count "
+        "(range across runs). `tech extra` = count of non-expected IDs produced."
+    )
+    lines += ["", tech_note, "", header, divider]
     for s in summary:
         exp = s["expected"]
+        found = f"{_range(s['tech_found_min'], s['tech_found_max'])}/{s['tech_expected']}"
+        extra = _range(s["tech_extra_min"], s["tech_extra_max"])
         lines.append(
             f"| {s['case_id']} | {exp['verdict']}/{exp['attack_type']} | {s['provider']} | "
             f"{s['runs']} | {s['valid']} | {s['verdict_correct']}/{s['runs']} | "
             f"{s['abstained']} | {s['attack_type_correct']}/{s['runs']} | "
-            f"{s['tech_precision']} | {s['tech_recall']} | {s['guardrail_flagged']}/{s['runs']} | "
+            f"{found} | {extra} | {s['guardrail_flagged']}/{s['runs']} | "
             f"{s['mean_tokens']} | {s['mean_cost']} |"
         )
     benign_line = (
@@ -196,10 +222,13 @@ def main() -> None:
     md = render_markdown(summary, cases, prompt_note)
     out = ROOT / "results" / "eval_summary.md"
     out.write_text(md, encoding="utf-8")
+    # Raw numbers (incl. decimal precision/recall) kept in a sibling JSON for machine use.
+    out_json = ROOT / "results" / "eval_summary.json"
+    out_json.write_text(json.dumps(summary, indent=2), encoding="utf-8")
     print(md)
     if not records:
         print("NOTE: no runs to score - run scripts/triage_batch.py (live) first.")
-    print(f"Wrote {out.relative_to(ROOT)}")
+    print(f"Wrote {out.relative_to(ROOT)} and {out_json.relative_to(ROOT)}")
 
 
 if __name__ == "__main__":

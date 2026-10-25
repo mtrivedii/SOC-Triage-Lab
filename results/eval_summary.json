@@ -1,0 +1,292 @@
+[
+  {
+    "case_id": "mixed_bruteforce_and_browsing_01",
+    "provider": "gemini",
+    "expected": {
+      "verdict": "malicious",
+      "attack_type": "ssh_bruteforce",
+      "techniques": [
+        "T1110",
+        "T1110.001"
+      ]
+    },
+    "runs": 3,
+    "valid": 3,
+    "invalid_rate": 0.0,
+    "verdict_correct": 3,
+    "abstained": 0,
+    "attack_type_correct": 3,
+    "tech_expected": 2,
+    "tech_found_min": 2,
+    "tech_found_max": 2,
+    "tech_extra_min": 1,
+    "tech_extra_max": 1,
+    "tech_precision": 0.6667,
+    "tech_recall": 1.0,
+    "guardrail_flagged": 0,
+    "hallucinated_runs": 0,
+    "mean_tokens": 3593.3333,
+    "mean_cost": 0.0
+  },
+  {
+    "case_id": "mixed_bruteforce_and_browsing_01",
+    "provider": "groq",
+    "expected": {
+      "verdict": "malicious",
+      "attack_type": "ssh_bruteforce",
+      "techniques": [
+        "T1110",
+        "T1110.001"
+      ]
+    },
+    "runs": 3,
+    "valid": 3,
+    "invalid_rate": 0.0,
+    "verdict_correct": 3,
+    "abstained": 0,
+    "attack_type_correct": 3,
+    "tech_expected": 2,
+    "tech_found_min": 2,
+    "tech_found_max": 2,
+    "tech_extra_min": 1,
+    "tech_extra_max": 1,
+    "tech_precision": 0.6667,
+    "tech_recall": 1.0,
+    "guardrail_flagged": 3,
+    "hallucinated_runs": 0,
+    "mean_tokens": 2989.0,
+    "mean_cost": 0.0
+  },
+  {
+    "case_id": "port_scan_01",
+    "provider": "gemini",
+    "expected": {
+      "verdict": "malicious",
+      "attack_type": "port_scan",
+      "techniques": [
+        "T1046"
+      ]
+    },
+    "runs": 2,
+    "valid": 2,
+    "invalid_rate": 0.0,
+    "verdict_correct": 2,
+    "abstained": 0,
+    "attack_type_correct": 2,
+    "tech_expected": 1,
+    "tech_found_min": 1,
+    "tech_found_max": 1,
+    "tech_extra_min": 0,
+    "tech_extra_max": 0,
+    "tech_precision": 1.0,
+    "tech_recall": 1.0,
+    "guardrail_flagged": 2,
+    "hallucinated_runs": 0,
+    "mean_tokens": 6942.0,
+    "mean_cost": 0.0
+  },
+  {
+    "case_id": "port_scan_01",
+    "provider": "groq",
+    "expected": {
+      "verdict": "malicious",
+      "attack_type": "port_scan",
+      "techniques": [
+        "T1046"
+      ]
+    },
+    "runs": 3,
+    "valid": 3,
+    "invalid_rate": 0.0,
+    "verdict_correct": 3,
+    "abstained": 0,
+    "attack_type_correct": 3,
+    "tech_expected": 1,
+    "tech_found_min": 1,
+    "tech_found_max": 1,
+    "tech_extra_min": 1,
+    "tech_extra_max": 1,
+    "tech_precision": 0.5,
+    "tech_recall": 1.0,
+    "guardrail_flagged": 3,
+    "hallucinated_runs": 0,
+    "mean_tokens": 5545.0,
+    "mean_cost": 0.0
+  },
+  {
+    "case_id": "ssh_bruteforce_fail_01",
+    "provider": "gemini",
+    "expected": {
+      "verdict": "malicious",
+      "attack_type": "ssh_bruteforce",
+      "techniques": [
+        "T1110",
+        "T1110.001"
+      ]
+    },
+    "runs": 2,
+    "valid": 2,
+    "invalid_rate": 0.0,
+    "verdict_correct": 2,
+    "abstained": 0,
+    "attack_type_correct": 2,
+    "tech_expected": 2,
+    "tech_found_min": 2,
+    "tech_found_max": 2,
+    "tech_extra_min": 1,
+    "tech_extra_max": 1,
+    "tech_precision": 0.6667,
+    "tech_recall": 1.0,
+    "guardrail_flagged": 1,
+    "hallucinated_runs": 0,
+    "mean_tokens": 3615.0,
+    "mean_cost": 0.0
+  },
+  {
+    "case_id": "ssh_bruteforce_fail_01",
+    "provider": "groq",
+    "expected": {
+      "verdict": "malicious",
+      "attack_type": "ssh_bruteforce",
+      "techniques": [
+        "T1110",
+        "T1110.001"
+      ]
+    },
+    "runs": 3,
+    "valid": 3,
+    "invalid_rate": 0.0,
+    "verdict_correct": 3,
+    "abstained": 0,
+    "attack_type_correct": 3,
+    "tech_expected": 2,
+    "tech_found_min": 2,
+    "tech_found_max": 2,
+    "tech_extra_min": 0,
+    "tech_extra_max": 1,
+    "tech_precision": 0.7778,
+    "tech_recall": 1.0,
+    "guardrail_flagged": 0,
+    "hallucinated_runs": 0,
+    "mean_tokens": 3001.6667,
+    "mean_cost": 0.0
+  },
+  {
+    "case_id": "ssh_bruteforce_success_01",
+    "provider": "gemini",
+    "expected": {
+      "verdict": "malicious",
+      "attack_type": "ssh_bruteforce",
+      "techniques": [
+        "T1110",
+        "T1110.001",
+        "T1078",
+        "T1021.004"
+      ]
+    },
+    "runs": 2,
+    "valid": 2,
+    "invalid_rate": 0.0,
+    "verdict_correct": 2,
+    "abstained": 0,
+    "attack_type_correct": 2,
+    "tech_expected": 4,
+    "tech_found_min": 4,
+    "tech_found_max": 4,
+    "tech_extra_min": 0,
+    "tech_extra_max": 0,
+    "tech_precision": 1.0,
+    "tech_recall": 1.0,
+    "guardrail_flagged": 2,
+    "hallucinated_runs": 0,
+    "mean_tokens": 3444.0,
+    "mean_cost": 0.0
+  },
+  {
+    "case_id": "ssh_bruteforce_success_01",
+    "provider": "groq",
+    "expected": {
+      "verdict": "malicious",
+      "attack_type": "ssh_bruteforce",
+      "techniques": [
+        "T1110",
+        "T1110.001",
+        "T1078",
+        "T1021.004"
+      ]
+    },
+    "runs": 3,
+    "valid": 3,
+    "invalid_rate": 0.0,
+    "verdict_correct": 3,
+    "abstained": 0,
+    "attack_type_correct": 3,
+    "tech_expected": 4,
+    "tech_found_min": 4,
+    "tech_found_max": 4,
+    "tech_extra_min": 0,
+    "tech_extra_max": 0,
+    "tech_precision": 1.0,
+    "tech_recall": 1.0,
+    "guardrail_flagged": 0,
+    "hallucinated_runs": 0,
+    "mean_tokens": 2854.3333,
+    "mean_cost": 0.0
+  },
+  {
+    "case_id": "web_dir_scan_01",
+    "provider": "gemini",
+    "expected": {
+      "verdict": "malicious",
+      "attack_type": "web_dir_scan",
+      "techniques": [
+        "T1595.003"
+      ]
+    },
+    "runs": 1,
+    "valid": 1,
+    "invalid_rate": 0.0,
+    "verdict_correct": 1,
+    "abstained": 0,
+    "attack_type_correct": 1,
+    "tech_expected": 1,
+    "tech_found_min": 1,
+    "tech_found_max": 1,
+    "tech_extra_min": 0,
+    "tech_extra_max": 0,
+    "tech_precision": 1.0,
+    "tech_recall": 1.0,
+    "guardrail_flagged": 1,
+    "hallucinated_runs": 0,
+    "mean_tokens": 3118.0,
+    "mean_cost": 0.0
+  },
+  {
+    "case_id": "web_dir_scan_01",
+    "provider": "groq",
+    "expected": {
+      "verdict": "malicious",
+      "attack_type": "web_dir_scan",
+      "techniques": [
+        "T1595.003"
+      ]
+    },
+    "runs": 3,
+    "valid": 3,
+    "invalid_rate": 0.0,
+    "verdict_correct": 3,
+    "abstained": 0,
+    "attack_type_correct": 3,
+    "tech_expected": 1,
+    "tech_found_min": 0,
+    "tech_found_max": 0,
+    "tech_extra_min": 1,
+    "tech_extra_max": 1,
+    "tech_precision": 0.0,
+    "tech_recall": 0.0,
+    "guardrail_flagged": 3,
+    "hallucinated_runs": 0,
+    "mean_tokens": 2911.6667,
+    "mean_cost": 0.0
+  }
+]

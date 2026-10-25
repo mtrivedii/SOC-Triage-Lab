@@ -56,6 +56,20 @@ def test_score_run_guardrail_flag():
     assert s["guardrail_flagged"] is True
 
 
+def test_technique_counts_and_render_shows_counts():
+    cases = {"ssh_bruteforce_success_01": {"expected": EXPECTED}}  # expected techniques T1110, T1078
+    res = {"verdict": "malicious", "attack_type": "ssh_bruteforce",
+           "attack_techniques": ["T1110", "T9999"]}  # 1 of 2 expected + 1 extra
+    s = triage_eval.score_run(_rec(res), EXPECTED)
+    assert s["tech_found"] == 1 and s["tech_expected"] == 2 and s["tech_extra"] == 1
+    # raw decimals still present for the JSON output
+    assert s["tech_precision"] == 0.5 and s["tech_recall"] == 0.5
+
+    md = triage_eval.render_markdown(triage_eval.summarize([_rec(res)], cases), cases)
+    assert "tech found" in md and "tech extra" in md
+    assert "| 1/2 |" in md  # found/expected as counts, not a decimal
+
+
 def test_filter_by_hash():
     recs = [
         {"prompt_hash": "aaa", "case_id": "x"},
