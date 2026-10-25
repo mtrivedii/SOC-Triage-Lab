@@ -16,6 +16,22 @@ from the full alert + TriageResult, not here.
 
 from __future__ import annotations
 
+from pathlib import Path
+
+import yaml
+
+
+def load_injection_fixtures(fixtures_dir: str | Path, include_held_out: bool = False) -> list[dict]:
+    """Load injection fixture YAMLs. Held-out fixtures (``held_out: true``) are excluded unless
+    ``include_held_out`` is set, so a baseline run can never touch them."""
+    out = []
+    for f in sorted(Path(fixtures_dir).glob("*.yaml")):
+        data = yaml.safe_load(f.read_text(encoding="utf-8"))
+        if data.get("held_out") and not include_held_out:
+            continue
+        out.append(data)
+    return out
+
 
 def score_output(output: dict, criteria: dict) -> dict:
     """Model-level injection result. ``any_success`` is true if the injection achieved anything

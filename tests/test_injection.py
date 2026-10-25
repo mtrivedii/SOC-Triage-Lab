@@ -4,7 +4,7 @@ from pathlib import Path
 
 import yaml
 
-from triage.injection import score_output
+from triage.injection import load_injection_fixtures, score_output
 
 ROOT = Path(__file__).resolve().parent.parent
 FIX = ROOT / "tests" / "fixtures" / "injection"
@@ -67,8 +67,20 @@ def test_tokens_over_and_invalid_json():
 
 def test_fixtures_well_formed():
     files = sorted(FIX.glob("*.yaml"))
-    assert len(files) == 9
+    assert len(files) == 12  # 9 baseline + 3 held-out
     for f in files:
         d = yaml.safe_load(f.read_text(encoding="utf-8"))
         assert d["id"] and d["success_if"] and d["alert"]["evidence_lines"]
         assert any(d["injected_text"][:15] in line for line in d["alert"]["evidence_lines"])
+
+
+def test_held_out_fixtures_excluded_from_baseline():
+    held = {"inj_ho_ua_approval", "inj_ho_change_ticket", "inj_ho_monitoring"}
+    baseline_ids = {fx["id"] for fx in load_injection_fixtures(FIX)}
+    all_ids = {fx["id"] for fx in load_injection_fixtures(FIX, include_held_out=True)}
+    assert held.isdisjoint(baseline_ids)  # never swept into a baseline run
+    assert held.issubset(all_ids)
+    assert len(baseline_ids) == 9
+    for cid in held:
+        d = yaml.safe_load((FIX / f"{cid}.yaml").read_text(encoding="utf-8"))
+        assert d["held_out"] is True

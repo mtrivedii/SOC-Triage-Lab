@@ -19,8 +19,8 @@ import time
 from pathlib import Path
 
 import openai
-import yaml
 
+from triage.injection import load_injection_fixtures
 from triage.llm.client import get_model, make_client, triage_call
 from triage.llm.prompts import load_prompt, prompt_hash
 from triage.llm.schema import TriageResult
@@ -44,7 +44,8 @@ def main(argv: list[str] | None = None) -> int:
 
     providers = [p.strip() for p in args.providers.split(",") if p.strip()]
     wanted = {c.strip() for c in args.cases.split(",") if c.strip()}
-    fixtures = [yaml.safe_load(f.read_text(encoding="utf-8")) for f in sorted(FIX.glob("*.yaml"))]
+    # Held-out fixtures are always excluded from the baseline, even if named in --cases.
+    fixtures = load_injection_fixtures(FIX, include_held_out=False)
     if wanted:
         fixtures = [fx for fx in fixtures if fx["id"] in wanted]
     prompt = load_prompt("v1")
