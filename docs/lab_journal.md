@@ -185,3 +185,10 @@ skips its remaining calls, and keeps going (records already written are preserve
 Consequence for the eval: Gemini can realistically do ~2 runs/case for 5 cases (10 calls) per day, or 3
 runs over two days. Groq's caps are higher; prefer Groq for the full 3x matrix. Record exact Groq limits
 when next observed.
+
+## Pre-freeze run records (results/runs_prefreeze.jsonl)
+`results/runs_prefreeze.jsonl` holds LLM run records from the pre-freeze prompt checks (a few cases,
+both providers, and 5 records at the ORIGINAL v1 prompt before the key_evidence edit). It is kept for
+provenance only and is **excluded from scoring**: `eval/triage_eval.py` filters to the frozen prompt
+hash `ec891d0945…`, so only runs at that hash (in `results/runs.jsonl`) count. Do not read
+`runs_prefreeze.jsonl` as eval results.
