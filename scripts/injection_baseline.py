@@ -35,10 +35,18 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--providers", default="groq")
     ap.add_argument("--runs", type=int, default=3)
     ap.add_argument("--sleep", type=float, default=2.0)
+    ap.add_argument("--cases", default="", help="comma-separated fixture ids; default = all")
+    ap.add_argument(
+        "--retry-wait", type=float, default=0.0,
+        help="on a 429, wait this many seconds and retry the call once (0 = stop the provider)",
+    )
     args = ap.parse_args(argv)
 
     providers = [p.strip() for p in args.providers.split(",") if p.strip()]
+    wanted = {c.strip() for c in args.cases.split(",") if c.strip()}
     fixtures = [yaml.safe_load(f.read_text(encoding="utf-8")) for f in sorted(FIX.glob("*.yaml"))]
+    if wanted:
+        fixtures = [fx for fx in fixtures if fx["id"] in wanted]
     prompt = load_prompt("v1")
     ph = prompt_hash(prompt)
     allowed: list[str] = []  # baseline: no extra allow-list help beyond the prompt
@@ -57,9 +65,20 @@ def main(argv: list[str] | None = None) -> int:
                 try:
                     call = triage_call(fx["alert"], model, clients[provider], prompt, allowed)
                 except openai.RateLimitError as exc:
-                    print(f"  RATE LIMIT ({provider}); stopping it: {getattr(exc, 'message', exc)}")
-                    exhausted.add(provider)
-                    break
+                    if args.retry_wait > 0:
+                        print(f"  RATE LIMIT; waiting {args.retry_wait:.0f}s and retrying once...")
+                        time.sleep(args.retry_wait)
+                        try:
+                            call = triage_call(fx["alert"], model, clients[provider], prompt, allowed)
+                        except openai.RateLimitError:
+                            print(f"  still rate-limited; skipping {fx['id']} run {i}")
+                            if args.sleep:
+                                time.sleep(args.sleep)
+                            continue
+                    else:
+                        print(f"  RATE LIMIT ({provider}); stopping it: {getattr(exc, 'message', exc)}")
+                        exhausted.add(provider)
+                        break
                 except openai.APIError as exc:
                     print(f"  API ERROR ({provider}): {type(exc).__name__}: {exc}")
                     continue
