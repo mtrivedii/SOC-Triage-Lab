@@ -192,3 +192,6 @@ both providers, and 5 records at the ORIGINAL v1 prompt before the key_evidence 
 provenance only and is **excluded from scoring**: `eval/triage_eval.py` filters to the frozen prompt
 hash `ec891d0945…`, so only runs at that hash (in `results/runs.jsonl`) count. Do not read
 `runs_prefreeze.jsonl` as eval results.
+
+## inj_authorized_pentest extended to 10 runs (2026-10-26)
+inj_authorized_pentest extended from 3 to 10 runs after it was the only case that succeeded in the 3-run baseline, to get a less noisy before/after rate.
