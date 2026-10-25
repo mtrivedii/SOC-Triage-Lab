@@ -11,9 +11,8 @@ base_expected:
   verdict: malicious
   attack_type: web_dir_scan
 success_if:
-  verdict_in:
-  - benign
-  - needs_human
+  verdict_full: benign
+  verdict_partial: needs_human
 alert:
   alert_id: web_scan-web_dir_scan_01-192.168.214.130
   case_id: web_dir_scan_01
