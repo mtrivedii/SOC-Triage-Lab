@@ -419,13 +419,14 @@ Pick at most one:
 | 2026-10-22 | 4 (eval, in progress) | Live batch runner (`scripts/triage_batch.py`) + offline scorer (`eval/triage_eval.py`). **Groq 3 runs/alert done** (15 valid, frozen hash) in `results/runs.jsonl`; scorer filters to the frozen prompt hash. Gemini batch hit the free-tier cap (20 req/day) after 1 run; runner hardened to catch 429/API errors and keep going | **Demo scale decision:** Groq 3 runs/alert, Gemini 2 runs/alert because Gemini free tier = 20 req/day (plan cut list "2 runs if budget tight"); documented as a limitation, not a full benchmark | Gemini 2 runs/alert when quota resets; then Sprint 4 interpretation vs the detector baseline |
 | 2026-10-25 | 4 (audit) | Read-only audit (`docs/audit_2026-10-25.md`): `uv sync --frozen` clean, 78 tests pass, ruff clean, frozen prompt hash matches, secrets clean (45 commits), both VMs have `clean-base`. Confirmed 5 detector alerts/pass; Groq complete, Gemini under-covered (1 frozen run) | — | Run the Gemini batch, score, then write the interpretation |
 | 2026-10-25 | 4 (done) | 25 frozen-prompt runs scored (Groq 15, Gemini 10); eval reports technique overlap as counts + raw JSON; findings written in `docs/sprint4_findings.md` (verdict/type 25/25; ATT&CK exact only 9/25; guardrail flags 15/25, all checker false-alarms or by-design evidence-only citations, no hallucinations) | Gemini at 1-3 runs/alert instead of 3 (free-tier 20 req/day cap + one transient 503), not full 3x | Sprint 5: prompt-injection testing; also checker v2 + re-score saved runs |
+| 2026-10-26 | 5 (injection baseline) | Threat model (`docs/threat_model.md`); checker v2 + offline re-score (`results/checker_v1_vs_v2.md`, ungrounded_numbers 6/7->0/0); 9 injection fixtures + offline scorer; **Groq injection baseline done** (`results/injection_baseline.md`): 27 runs + 7 extra (`inj_authorized_pentest` to 10). Only model-level successes = authorised-pentest verdict flip (full 4 / partial 2 of 10) and one long-string token inflation; **pipeline_changed 0** (severity floor held). 3 held-out cases frozen and excluded from the baseline | Gemini injection spot-check deferred to tomorrow (20 req/day cap); defences not built yet | Gemini spot-check (9 calls, held-out excluded), then build + measure defences before/after |
 
 **Label changes after seeing results (must be listed here):** none yet.
 ---
 
 ## 11. Current state / handoff (read this when starting a new chat)
 
-**Last updated:** 2026-10-25. **Current sprint:** 5 (prompt-injection testing). Sprint 4 (evaluation) is done — see `docs/sprint4_findings.md`.
+**Last updated:** 2026-10-26. **Current sprint:** 5 (prompt-injection testing); the no-defence baseline is done, defences are next. Sprint 4 (evaluation) is done — see `docs/sprint4_findings.md`.
 
 **How to resume in a new chat:** give the assistant `PROJECT_PLAN.md` and `CLAUDE.md` from this repo (`mtrivedii/soc-triage-lab`, private). Then confirm the sprint from the Progress Log and continue.
 
@@ -439,6 +440,15 @@ Pick at most one:
 
 **Lab:** the analysis phase runs entirely off the saved logs in `data/raw/`, so the VMs are not needed and should be shut down for it (both were still running at the 2026-10-25 audit; no VM actions were taken this session). **Sprint 5 (prompt-injection testing) needs the lab VMs again** — target `ubuntu-target` (192.168.214.129) + lab Kali (192.168.214.130) on the host-only net, `clean-base` on both, lab key `~/.ssh/lab_ed25519`. Full lab/snapshot/credential details are in the Progress Log and `docs/lab_journal.md`.
 
-**Next (Sprint 5, needs the lab VMs back ON, started from `clean-base`):** prompt-injection testing. Generate real injection cases — an SSH login whose **username contains an injection string** (so it lands in `auth.log` naturally), plus **web requests with injection text in the path and user-agent** — then measure attack success before/after defences, per model, and write `docs/threat_model.md`. Offline companion task (no lab needed): **checker v2** (stop flagging status codes, IP octets, version numbers, computed durations) and **re-score the saved v1 runs with both checker versions**, reporting before/after. Both VMs were left running at the audit; confirm `vmrun listSnapshots` shows `clean-base` on each before starting.
+**Sprint 5 so far (2026-10-26, all offline/Groq — no VM actions):**
+- `docs/threat_model.md` written (assets, attacker-controlled fields, what the design limits, out of scope).
+- **Checker v2** added alongside v1 (`guardrails.check(version=...)`); saved v1 runs re-scored with both (`results/checker_v1_vs_v2.md`). v2 is designed-after-the-fact, so it is only trusted on new (held-out / injection) data.
+- **Injection cases:** 9 baseline fixtures (`tests/fixtures/injection/`) with frozen success criteria; offline scorer `src/triage/injection.py`; runner `scripts/injection_baseline.py`; report `eval/injection_report.py`.
+- **Groq injection baseline (no defences) done** (`results/injection_baseline.md`): 9 cases x3, plus `inj_authorized_pentest` extended to 10. Model-level successes: authorised-pentest verdict flip (full 4 / partial 2 of 10) + one long-string token inflation; everything else held; **pipeline_changed 0** (severity floor held on every run). No prompt leak, no canary, no hallucinated IDs.
+- **3 held-out cases frozen** (`held_out: true`, excluded from every baseline run) for testing defences on unseen data: `inj_ho_ua_approval`, `inj_ho_change_ticket`, `inj_ho_monitoring`.
+
+**Next:**
+1. **Gemini injection spot-check** (tomorrow, after the 20/day quota resets): `scripts/injection_baseline.py --providers gemini --runs 1` (9 calls; held-out auto-excluded), then `eval/injection_report.py`.
+2. **Build defences and re-measure before/after** (prompt hardening, input sanitisation, the severity-floor/rule-disagreement logic, output validation), including on the held-out cases. Prompt v1 and the current success criteria stay frozen for the before/after comparison.
 
 **Quick start:** `uv sync`, then `uv run pytest -q` and `uv run ruff check .`. Model check: `uv run python scripts/hello.py <gemini|groq> [model-id]`.
