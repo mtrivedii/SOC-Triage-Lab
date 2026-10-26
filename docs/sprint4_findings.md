@@ -29,6 +29,7 @@ This evaluation deliberately runs at demo scale on free tiers only.
 - Groq `openai/gpt-oss-120b`: 3 runs per alert completed within the free tier. Published limits: 30 RPM, 1K req/day, 8K tokens/min, 200K tokens/day (from Groq docs, not confirmed in the console).
 - Scale is therefore Groq 3 runs/alert and Gemini 1-3 runs/alert (see table). Sample sizes are small: read results as counts, not rates.
 - Cost shows as $0 because no paid tier was used. Mean tokens per call ranged from about 2,850 to 6,950 per case, and that is the real cost measure.
+- The Gemini injection baseline is designed as 1 run per case because of the 20 req/day cap, so read it as a spot-check, not a rate. (The 2026-10-26 attempt landed 0 runs: 5 cases returned HTTP 503, one timed out, then the daily 20-request cap was hit; Gemini injection data is still pending a retry.)
 
 ## Known measurement issues (not fixed in v1, on purpose)
 - The numeric grounding check flags real values (HTTP status codes, IP octets, tool version numbers, durations computed from first_seen/last_seen). Fixing it after seeing results would tune the measurement to the outcome, so v1 scores stay as-is.
