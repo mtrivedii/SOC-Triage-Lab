@@ -37,14 +37,27 @@ def get_model(provider: str) -> str:
     return _load_toml("models.toml")[provider]["model"]
 
 
+def _cap_line(line: str, limit: int) -> str:
+    if len(line) <= limit:
+        return line
+    return line[:limit] + f" [truncated {len(line) - limit} chars]"
+
+
 def build_messages(
-    system_prompt: str, alert: dict, allowed_techniques: list[str]
+    system_prompt: str, alert: dict, allowed_techniques: list[str], cap_fields: int | None = None
 ) -> list[dict[str, str]]:
     """System prompt + a user message that separates trusted alert facts from the
     untrusted log evidence (wrapped in markers the prompt tells the model to distrust).
+
+    Defence 3 (input caps): when ``cap_fields`` is set, each evidence line sent to the model is
+    truncated to that many characters (marked ``[truncated N chars]``). The alert keeps the full
+    raw lines for humans; only the model's copy is capped.
     """
     meta = {k: v for k, v in alert.items() if k != "evidence_lines"}
-    evidence = "\n".join(alert.get("evidence_lines", []))
+    ev_lines = alert.get("evidence_lines", [])
+    if cap_fields:
+        ev_lines = [_cap_line(line, cap_fields) for line in ev_lines]
+    evidence = "\n".join(ev_lines)
     user = (
         "ALERT (structured facts, trusted):\n"
         + json.dumps(meta, indent=2, default=str)
@@ -88,14 +101,16 @@ def triage_call(
     temperature: float = 0.0,
     max_retries: int = 1,
     notify: Callable[[str], None] | None = None,
+    cap_fields: int | None = None,
 ) -> CallResult:
     """Call the model, validate, retry once on invalid output, and capture metrics
     (tokens, latency, attempts, raw response). ``client`` must expose
     ``chat.completions.create`` like the OpenAI SDK; tests inject a fake. ``notify``, if
     given, is called with a short status string before each request (so a slow call does
     not look frozen). A request timeout raised by the client propagates unchanged.
+    ``cap_fields`` applies Defence 3 (evidence field caps) to the model's copy only.
     """
-    messages = build_messages(system_prompt, alert, allowed_techniques)
+    messages = build_messages(system_prompt, alert, allowed_techniques, cap_fields=cap_fields)
     raw = ""
     error = ""
     attempts = 0

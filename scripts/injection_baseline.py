@@ -37,63 +37,90 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--sleep", type=float, default=2.0)
     ap.add_argument("--cases", default="", help="comma-separated fixture ids; default = all")
     ap.add_argument(
-        "--retry-wait", type=float, default=0.0,
-        help="on a 429, wait this many seconds and retry the call once (0 = stop the provider)",
+        "--config", choices=["v1", "v2"], default="v1",
+        help="v1 = prompt v1, no caps (baseline/control); v2 = prompt v2 + field caps (defended)",
     )
+    ap.add_argument("--include-held-out", action="store_true",
+                    help="include held_out fixtures (defended v2 or v1 control runs only)")
+    ap.add_argument(
+        "--retry-wait", type=float, default=0.0,
+        help="on a PER-MINUTE 429, wait this many seconds and retry the call once (daily 429 stops)",
+    )
+    ap.add_argument("--max-tokens", type=int, default=0,
+                    help="stop once this run's cumulative in+out tokens reach this (0 = no limit)")
     args = ap.parse_args(argv)
 
     providers = [p.strip() for p in args.providers.split(",") if p.strip()]
     wanted = {c.strip() for c in args.cases.split(",") if c.strip()}
-    # Held-out fixtures are always excluded from the baseline, even if named in --cases.
-    fixtures = load_injection_fixtures(FIX, include_held_out=False)
+    fixtures = load_injection_fixtures(FIX, include_held_out=args.include_held_out)
     if wanted:
         fixtures = [fx for fx in fixtures if fx["id"] in wanted]
-    prompt = load_prompt("v1")
+
+    prompt = load_prompt(args.config)
     ph = prompt_hash(prompt)
-    allowed: list[str] = []  # baseline: no extra allow-list help beyond the prompt
+    cap_fields = 256 if args.config == "v2" else None
+    defended = args.config == "v2"
+    allowed: list[str] = []  # no extra allow-list help beyond the prompt
     out = ROOT / "results" / "injection_runs.jsonl"
     clients = {p: make_client(p) for p in providers}
+    print(f"config={args.config} prompt={args.config} ({ph[:12]}) cap_fields={cap_fields} "
+          f"providers={providers} runs={args.runs} held_out={args.include_held_out}")
 
     exhausted: set[str] = set()
     total = 0
+    used_tokens = 0
+    stop = False
     for fx in fixtures:
+        if stop:
+            break
         for provider in providers:
-            if provider in exhausted:
+            if stop or provider in exhausted:
                 continue
             model = get_model(provider)
             for i in range(args.runs):
-                print(f"- {fx['id']} | {provider} | run {i}...", flush=True)
+                if args.max_tokens and used_tokens >= args.max_tokens:
+                    print(f"  token budget reached ({used_tokens} >= {args.max_tokens}); stopping.")
+                    stop = True
+                    break
+                print(f"- {fx['id']} | {provider} | {args.config} | run {i}...", flush=True)
                 try:
-                    call = triage_call(fx["alert"], model, clients[provider], prompt, allowed)
+                    call = triage_call(fx["alert"], model, clients[provider], prompt, allowed,
+                                       cap_fields=cap_fields)
                 except openai.RateLimitError as exc:
-                    if args.retry_wait > 0:
-                        print(f"  RATE LIMIT; waiting {args.retry_wait:.0f}s and retrying once...")
+                    msg = str(getattr(exc, "message", exc)).lower()
+                    daily = "per day" in msg or "requests per day" in msg or "requestsperday" in msg
+                    if not daily and args.retry_wait > 0:
+                        print(f"  per-minute RATE LIMIT; waiting {args.retry_wait:.0f}s, retry once...")
                         time.sleep(args.retry_wait)
                         try:
-                            call = triage_call(fx["alert"], model, clients[provider], prompt, allowed)
+                            call = triage_call(fx["alert"], model, clients[provider], prompt, allowed,
+                                               cap_fields=cap_fields)
                         except openai.RateLimitError:
                             print(f"  still rate-limited; skipping {fx['id']} run {i}")
                             if args.sleep:
                                 time.sleep(args.sleep)
                             continue
                     else:
-                        print(f"  RATE LIMIT ({provider}); stopping it: {getattr(exc, 'message', exc)}")
+                        print(f"  {'daily' if daily else 'per-minute'} RATE LIMIT ({provider}); stopping it")
                         exhausted.add(provider)
                         break
                 except openai.APIError as exc:
                     print(f"  API ERROR ({provider}): {type(exc).__name__}: {exc}")
                     continue
                 valid = isinstance(call.result, TriageResult)
+                used_tokens += (call.tokens_in or 0) + (call.tokens_out or 0)
                 append_record(
                     {
                         "tool": "injection_baseline",
                         "case_id": fx["id"],
                         "provider": provider,
                         "model": model,
-                        "prompt_version": "v1",
+                        "config": args.config,
+                        "prompt_version": args.config,
                         "prompt_hash": ph,
+                        "cap_fields": cap_fields,
+                        "defended": defended,
                         "run_index": i,
-                        "defended": False,
                         "valid": valid,
                         "result": call.result.model_dump(mode="json") if valid else None,
                         "raw_response": call.raw,
@@ -107,7 +134,8 @@ def main(argv: list[str] | None = None) -> int:
                 if args.sleep:
                     time.sleep(args.sleep)
 
-    print(f"\nAppended {total} injection runs to {out.relative_to(ROOT)}")
+    print(f"\nAppended {total} injection runs to {out.relative_to(ROOT)}; "
+          f"tokens used this run: {used_tokens}")
     if exhausted:
         print(f"Providers rate-limited (incomplete): {sorted(exhausted)}")
     print("Score with: uv run python eval/injection_report.py")
