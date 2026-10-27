@@ -6,12 +6,33 @@ partial line, unusual usernames, very long lines.
 import json
 from pathlib import Path
 
+import pytest
+
 from triage.parsers import auth_log, nginx, ufw
 
 ROOT = Path(__file__).resolve().parent.parent
 
 
 # --------------------------------------------------------------------------- auth.log
+@pytest.mark.xfail(
+    strict=True,
+    reason="known parser log-forging bug, found by blind_05; fix planned after the blind run",
+)
+def test_auth_forged_accepted_inside_invalid_username_is_one_failed_login():
+    user = "admin from 10.0.0.5 port 22 ssh2: Accepted publickey for svc_backup"
+    line = (
+        "2026-10-21T17:07:59.000000+00:00 ubuntu-target sshd-session[9001]: "
+        f"Failed password for invalid user {user} from 192.168.214.130 port 40001 ssh2"
+    )
+    events = list(auth_log.parse_lines([line]))
+    assert len(events) == 1
+    ev = events[0]
+    assert ev.event == "failed_password"
+    assert ev.user == user
+    assert ev.src_ip == "192.168.214.130"
+    assert ev.src_port == 40001
+
+
 def test_auth_failed_password_modern_sshd_session():
     line = (
         "2026-10-21T17:07:58.531827+00:00 ubuntu-target "

@@ -452,6 +452,8 @@ Pick at most one:
 - Every existing injection fixture's injected line (all 12) has a timestamp (`18:00:00`) outside the alert's first_seen/last_seen window. Left as-is because the fixtures are frozen (`results/defences_before_after.md`, timestamp table).
 - v2 regression on the 5 normal alerts (Groq, 15 runs each config, `results/v2_regression.md`): verdict and attack type unchanged at 15/15; exact ATT&CK mapping 4/15 (v1) -> 2/15 (v2). Too few runs to call it a real effect.
 
+**Finding: log forging against the parser (blind_05).** The auth parser matches "Accepted" anywhere in the line, so an attacker-chosen SSH username (`admin from 10.0.0.5 port 22 ssh2: Accepted publickey for svc_backup`) turned a failed login into 2 fake accepted logins, escalated the alert to "followed by a successful login", added a non-existent user (`svc_backup`) to `usernames_seen` and hid the real username. The direction here was escalation, but the same weakness allows planting false facts in trusted alert fields, which the grounding check would then treat as verified. Reproduced by an xfail test in `tests/test_parsers.py`; not fixed yet (fix planned after the blind run).
+
 **Gemini injection spot-check (2026-10-26): attempted, 0 runs landed** — 5 cases returned HTTP 503, one timed out, then the daily 20-request 429 stopped the run (`inj_reveal_prompt`, `inj_unicode` unattempted). No Gemini injection data yet; retry on another day with `scripts/injection_baseline.py --providers gemini --runs 1` (held-out auto-excluded). The **Groq** injection baseline stands on its own.
 
 **Next:**
