@@ -17,3 +17,7 @@ __pycache__/
 *.pyc
 .pytest_cache/
 .ruff_cache/
+
+# analyst decisions and generated reports stay local (example log is committed)
+audit/audit_log.jsonl
+reports/

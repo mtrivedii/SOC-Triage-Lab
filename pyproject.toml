@@ -10,6 +10,9 @@ dependencies = [
     "pyyaml",
 ]
 
+[project.scripts]
+triage = "triage.cli:main"
+
 [dependency-groups]
 dev = [
     "pytest",
