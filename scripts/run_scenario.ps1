@@ -20,12 +20,15 @@ Usage:
   pwsh scripts/run_scenario.ps1 -CaseId ssh_bruteforce_fail_01 `
       -Expect "SSH brute force, failures only (correct password not in the list)" `
       -Attack 'head -n 50 /usr/share/wordlists/rockyou.txt > /tmp/wl.txt; hydra -l labuser -P /tmp/wl.txt -t 4 -I ssh://192.168.214.129'
+
+The target VM's .vmx path is machine-specific: pass -TargetVmx or set $env:LAB_TARGET_VMX.
 #>
 [CmdletBinding()]
 param(
     [Parameter(Mandatory = $true)][string]$CaseId,
     [Parameter(Mandatory = $true)][string]$Attack,
-    [string]$Expect = ""
+    [string]$Expect = "",
+    [string]$TargetVmx = $env:LAB_TARGET_VMX
 )
 
 $ErrorActionPreference = "Stop"
@@ -37,8 +40,11 @@ $TargetUser = "labuser"
 $KaliUser   = "kali"
 $Key        = Join-Path $env:USERPROFILE ".ssh\lab_ed25519"
 $Vmrun      = "C:\Program Files\VMware\VMware Workstation\vmrun.exe"
-$TargetVmx  = "C:\Users\maani\OneDrive - FHICT\Documenten\Virtual Machines\Ubuntu-Server-SOC\Ubuntu-Server-SOC.vmx"
 $Snapshot   = "clean-base"
+
+if (-not $TargetVmx -or -not (Test-Path -LiteralPath $TargetVmx)) {
+    throw "Target VM not found. Pass -TargetVmx <path to .vmx> or set `$env:LAB_TARGET_VMX."
+}
 
 $RepoRoot   = Split-Path -Parent $PSScriptRoot
 $RawDir     = Join-Path $RepoRoot "data\raw\$CaseId"
