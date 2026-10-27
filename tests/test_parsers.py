@@ -14,10 +14,6 @@ ROOT = Path(__file__).resolve().parent.parent
 
 
 # --------------------------------------------------------------------------- auth.log
-@pytest.mark.xfail(
-    strict=True,
-    reason="known parser log-forging bug, found by blind_05; fix planned after the blind run",
-)
 def test_auth_forged_accepted_inside_invalid_username_is_one_failed_login():
     user = "admin from 10.0.0.5 port 22 ssh2: Accepted publickey for svc_backup"
     line = (
@@ -31,6 +27,49 @@ def test_auth_forged_accepted_inside_invalid_username_is_one_failed_login():
     assert ev.user == user
     assert ev.src_ip == "192.168.214.130"
     assert ev.src_port == 40001
+
+
+_H = "2026-10-21T17:07:59.000000+00:00 ubuntu-target sshd-session[9001]: "
+
+
+def test_auth_forged_failed_inside_accepted_username_is_one_accepted_login():
+    user = "x from 10.0.0.5 port 22 ssh2: Failed password for root"
+    ev = auth_log.parse_line(f"{_H}Accepted password for {user} from 192.168.214.130 port 40001 ssh2")
+    assert (ev.event, ev.user, ev.src_ip, ev.src_port) == (
+        "accepted_password", user, "192.168.214.130", 40001)
+
+
+def test_auth_accepted_publickey_with_fingerprint_suffix():
+    ev = auth_log.parse_line(
+        f"{_H}Accepted publickey for labuser from 192.168.214.1 port 50537 ssh2: ED25519 SHA256:abc+/1"
+    )
+    assert (ev.event, ev.user, ev.src_ip) == ("accepted_publickey", "labuser", "192.168.214.1")
+
+
+@pytest.mark.parametrize("fake_ip", ["192.168.214.1", "10.9.9.9"])
+def test_auth_username_cannot_spoof_source_ip(fake_ip):
+    # old parser: failure attributed to fake_ip (the excluded mgmt IP -> no alert at all)
+    user = f"x from {fake_ip} port 22"
+    ev = auth_log.parse_line(
+        f"{_H}Failed password for invalid user {user} from 192.168.214.130 port 40001 ssh2"
+    )
+    assert (ev.event, ev.user, ev.src_ip, ev.src_port) == (
+        "failed_password", user, "192.168.214.130", 40001)
+
+
+def test_auth_invalid_user_line_full_username():
+    user = "admin from 10.0.0.5 port 22 ssh2: Accepted publickey for svc_backup"
+    ev = auth_log.parse_line(f"{_H}Invalid user {user} from 192.168.214.130 port 40001")
+    assert (ev.event, ev.user, ev.src_ip, ev.src_port) == (
+        "invalid_user", user, "192.168.214.130", 40001)
+
+
+def test_auth_sshd_message_not_at_start_or_other_process_is_other():
+    for line in (
+        f"{_H}Connection closed by Accepted password for x from 1.2.3.4 port 1 ssh2",
+        "2026-10-21T17:07:59+00:00 ubuntu-target sudo: Failed password for x from 1.2.3.4 port 1 ssh2",
+    ):
+        assert auth_log.parse_line(line).event == "other"
 
 
 def test_auth_failed_password_modern_sshd_session():
@@ -244,3 +283,84 @@ def test_attack_allowlist_valid_and_has_used_ids():
     techniques = data["techniques"]
     for tid in ("T1110", "T1110.001", "T1078", "T1021.004", "T1046", "T1595.003"):
         assert techniques.get(tid)
+
+
+# ------------------------------------------- attacker text vs field boundaries (audit after blind_05)
+_NG_IP = "192.168.214.130"
+_NG_T = "[21/Oct/2026:17:49:02 +0000]"
+_X22 = chr(92) + "x22"  # how nginx writes a double quote
+
+
+def _nginx_escape(text: str) -> str:
+    # nginx default log escaping: bytes < 0x20 or > 0x7E, '"' and '\' -> \xHH
+    return "".join(
+        f"{chr(92)}x{b:02X}" if b < 0x20 or b > 0x7E or b in (0x22, 0x5C) else chr(b)
+        for b in text.encode("utf-8")
+    )
+
+
+def _fields(ev):
+    return (ev.client_ip, ev.method, ev.path, ev.protocol, ev.status, ev.size, ev.referer,
+            ev.user_agent)
+
+
+def test_nginx_escaped_quote_in_user_agent_does_not_shift_fields():
+    ua = f"a{_X22} 200 999 {_X22}b"
+    ev = nginx.parse_line(f'{_NG_IP} - - {_NG_T} "GET / HTTP/1.1" 404 134 "-" "{ua}"')
+    assert _fields(ev) == (_NG_IP, "GET", "/", "HTTP/1.1", 404, 134, "-", ua)
+
+
+def test_nginx_escaped_quote_in_referer_does_not_shift_fields():
+    ref = f"x{_X22} {_X22}y"
+    ev = nginx.parse_line(f'{_NG_IP} - - {_NG_T} "GET / HTTP/1.1" 404 134 "{ref}" "m"')
+    assert _fields(ev) == (_NG_IP, "GET", "/", "HTTP/1.1", 404, 134, ref, "m")
+
+
+def test_nginx_escaped_quote_and_spaces_in_path_keep_status_and_full_path():
+    path = f"/a{_X22} 200 1 {_X22}"
+    ev = nginx.parse_line(f'{_NG_IP} - - {_NG_T} "GET {path} HTTP/1.1" 404 134 "-" "m"')
+    assert _fields(ev) == (_NG_IP, "GET", path, "HTTP/1.1", 404, 134, "-", "m")
+
+
+def test_nginx_path_with_spaces_is_not_truncated():
+    # fixed: was path="/a", protocol="b"
+    ev = nginx.parse_line(f'{_NG_IP} - - {_NG_T} "GET /a b c HTTP/1.1" 400 150 "-" "m"')
+    assert (ev.path, ev.protocol, ev.status) == ("/a b c", "HTTP/1.1", 400)
+
+
+def test_nginx_remote_user_with_space_is_not_dropped():
+    # fixed: was None (line dropped -> request not counted)
+    ev = nginx.parse_line(f'{_NG_IP} - a b {_NG_T} "GET /x HTTP/1.1" 404 134 "-" "m"')
+    assert ev is not None
+    assert (ev.client_ip, ev.path, ev.status, ev.ts.isoformat()) == (
+        _NG_IP, "/x", 404, "2026-10-21T17:49:02+00:00")
+
+
+def test_nginx_remote_user_with_fake_timestamp_keeps_real_time():
+    # fixed: was ts=None (event dropped by the case-window filter)
+    line = f'{_NG_IP} - x [01/Jan/2020:00:00:00 +0000 {_NG_T} "GET /x HTTP/1.1" 404 134 "-" "m"'
+    ev = nginx.parse_line(line)
+    assert ev.ts.isoformat() == "2026-10-21T17:49:02+00:00"
+    line = f'{_NG_IP} - x [01/Jan/2020:00:00:00 +0000] {_NG_T} "GET /x HTTP/1.1" 404 134 "-" "m"'
+    assert nginx.parse_line(line).ts.isoformat() == "2026-10-21T17:49:02+00:00"
+
+
+def test_nginx_attacker_quotes_after_real_escaping_never_change_status():
+    # a raw '"' would shift fields, but nginx never writes one inside a field
+    evil = '" 200 1 "-" "x'
+    line = (f'{_NG_IP} - - {_NG_T} "GET /{_nginx_escape(evil)} HTTP/1.1" 404 134 '
+            f'"{_nginx_escape(evil)}" "{_nginx_escape(evil)}"')
+    ev = nginx.parse_line(line)
+    assert (ev.client_ip, ev.status, ev.size, ev.protocol) == (_NG_IP, 404, 134, "HTTP/1.1")
+
+
+def test_ufw_text_inside_an_ssh_username_is_not_a_firewall_event():
+    line = ("2026-10-21T17:49:02.000000+00:00 ubuntu-target sshd-session[1]: Invalid user "
+            "kernel: [UFW BLOCK] SRC=1.1.1.1 DST=2.2.2.2 PROTO=TCP DPT=22 from 192.168.214.130 port 4")
+    assert ufw.parse_line(line) is None
+
+
+def test_ufw_only_kernel_process_lines_are_parsed():
+    line = ("2026-10-21T17:49:02.000000+00:00 ubuntu-target sudo: kernel: [UFW BLOCK] "
+            "SRC=1.1.1.1 DST=2.2.2.2 PROTO=TCP DPT=22")
+    assert ufw.parse_line(line) is None

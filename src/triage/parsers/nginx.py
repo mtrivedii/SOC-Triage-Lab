@@ -7,6 +7,12 @@ Target format, see docs/lab_journal.md:
 Quirks handled:
 - Client may be IPv6 localhost ``::1`` (local tests) or a real IPv4 (remote clients).
 - The request field can be malformed or empty (e.g. ``"-"``); method/path/protocol are then None.
+- Attacker-controlled text (audit after blind_05): nginx writes a quote or backslash as a
+  hex escape (backslash-x-HH), so raw quotes only ever delimit fields. ``$remote_user`` (from any Basic-auth header) may contain
+  spaces or ``[``, so it is matched lazily up to the LAST ``[timestamp] "`` (a crafted user can
+  no longer drop the line or fake its time). A request path may contain spaces (nginx logs the
+  raw request line, e.g. on a 400), so path = everything between the method and a trailing
+  ``HTTP/x`` token, not just the first word.
 Unrecognised lines are skipped; nothing here raises on malformed input.
 """
 
@@ -19,10 +25,11 @@ from datetime import datetime
 from pathlib import Path
 
 _LINE = re.compile(
-    r'^(?P<client>\S+)\s+\S+\s+\S+\s+\[(?P<ts>[^\]]+)\]\s+'
+    r'^(?P<client>\S+)\s+\S+\s+(?P<ruser>[^"]*?)\s+\[(?P<ts>[^\[\]]+)\]\s+'
     r'"(?P<req>[^"]*)"\s+(?P<status>\d{3})\s+(?P<size>\S+)'
     r'(?:\s+"(?P<referer>[^"]*)"\s+"(?P<ua>[^"]*)")?'
 )
+_PROTO = re.compile(r"HTTP/\d(?:\.\d)?")
 
 
 @dataclass
@@ -57,8 +64,9 @@ def parse_line(line: str) -> NginxEvent | None:
 
     req = (m.group("req") or "").split()
     method = req[0] if req else None
-    path = req[1] if len(req) > 1 else None
-    protocol = req[2] if len(req) > 2 else None
+    protocol = req[-1] if len(req) > 2 and _PROTO.fullmatch(req[-1]) else None
+    rest = req[1:-1] if protocol else req[1:]
+    path = " ".join(rest) if rest else None
 
     size_raw = m.group("size")
     size = int(size_raw) if size_raw.isdigit() else None

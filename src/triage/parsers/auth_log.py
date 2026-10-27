@@ -9,9 +9,13 @@ Key quirks handled:
 - Process is ``sshd-session[PID]`` on this build, but classic ``sshd[PID]`` is also accepted.
 - The classic ``Oct 21 16:15:41`` syslog header is tolerated (timestamp left as None, no year).
 
-Classification does not depend on the process field, so odd process tokens (pam_unix(...),
-systemd-logind, sudo) never break event detection. Unrecognised lines become ``other``; blank
-lines are dropped. Nothing here raises on malformed input.
+SSH events are only taken from ``sshd``/``sshd-session`` lines, and each message pattern is
+anchored at the START of the message and at the END of the line. The username is everything up
+to the LAST `` from <IP> port <N>`` (sshd appends the real source last), so text inside an
+attacker-chosen username ("... Accepted publickey for x from <IP> port <N>") can neither change
+the event type nor the source IP (log forging, found by blind_05). Other processes (pam_unix,
+systemd-logind, sudo) and unrecognised lines become ``other``; blank lines are dropped. Nothing
+here raises on malformed input.
 """
 
 from __future__ import annotations
@@ -31,13 +35,17 @@ _SYSLOG_HEAD = re.compile(
 )
 _PROC = re.compile(r"^(?P<proc>[^\s:\[]+)(?:\[(?P<pid>\d+)\])?:\s*(?P<msg>.*)$")
 
-_FAILED = re.compile(
-    r"Failed password for (?:invalid user )?(?P<user>.+?) from (?P<ip>\S+) port (?P<port>\d+)"
-)
+_SSHD = {"sshd", "sshd-session"}
+# real source suffix sshd appends; matched at the END so the greedy user takes everything before
+# the LAST occurrence
+_IP = r"(?P<ip>\d{1,3}(?:\.\d{1,3}){3}|[0-9A-Fa-f]*:[0-9A-Fa-f:.]+)"
+_SRC = rf" from {_IP} port (?P<port>\d+)"
+_FAILED = re.compile(rf"^Failed password for (?P<invalid>invalid user )?(?P<user>.*){_SRC} ssh2$")
+# publickey lines end with ": <KEYTYPE> SHA256:<fingerprint>"
 _ACCEPTED = re.compile(
-    r"Accepted (?P<method>\S+) for (?P<user>.+?) from (?P<ip>\S+) port (?P<port>\d+)"
+    rf"^Accepted (?P<method>\S+) for (?P<user>.*){_SRC} ssh2(?:: \S+ SHA256:\S+)?$"
 )
-_INVALID = re.compile(r"Invalid user (?P<user>.+?) from (?P<ip>\S+)(?: port (?P<port>\d+))?")
+_INVALID = re.compile(rf"^Invalid user (?P<user>.*){_SRC}$")
 
 
 @dataclass
@@ -95,9 +103,10 @@ def parse_line(line: str) -> AuthEvent | None:
     user = src_ip = None
     src_port: int | None = None
 
-    am = _ACCEPTED.search(msg)
-    fm = _FAILED.search(msg)
-    im = _INVALID.search(msg)
+    is_sshd = process in _SSHD
+    am = _ACCEPTED.match(msg) if is_sshd else None
+    fm = _FAILED.match(msg) if is_sshd else None
+    im = _INVALID.match(msg) if is_sshd else None
     if am:
         event = "accepted_" + am.group("method").lower()
         user, src_ip = am.group("user"), am.group("ip")
