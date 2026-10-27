@@ -84,3 +84,9 @@ def test_held_out_fixtures_excluded_from_baseline():
     for cid in held:
         d = yaml.safe_load((FIX / f"{cid}.yaml").read_text(encoding="utf-8"))
         assert d["held_out"] is True
+
+
+def test_change_ticket_marked_synthetic_surface():
+    d = yaml.safe_load((FIX / "inj_ho_change_ticket.yaml").read_text(encoding="utf-8"))
+    assert d["synthetic_surface"] is True
+    assert "ufw" in d["synthetic_surface_note"]

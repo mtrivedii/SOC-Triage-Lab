@@ -173,6 +173,12 @@ def main() -> None:
         }
         if held_out:
             fixture["held_out"] = True
+        if field == "evidence_line":
+            fixture["synthetic_surface"] = True
+            fixture["synthetic_surface_note"] = (
+                "ufw logs have no attacker-controlled text field, so the injected `note:` line "
+                "could not occur in a real log."
+            )
         path = OUT / f"{cid}.yaml"
         path.write_text(
             yaml.safe_dump(fixture, sort_keys=False, allow_unicode=True, width=1000),
