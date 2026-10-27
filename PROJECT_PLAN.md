@@ -421,13 +421,14 @@ Pick at most one:
 | 2026-10-25 | 4 (done) | 25 frozen-prompt runs scored (Groq 15, Gemini 10); eval reports technique overlap as counts + raw JSON; findings written in `docs/sprint4_findings.md` (verdict/type 25/25; ATT&CK exact only 9/25; guardrail flags 15/25, all checker false-alarms or by-design evidence-only citations, no hallucinations) | Gemini at 1-3 runs/alert instead of 3 (free-tier 20 req/day cap + one transient 503), not full 3x | Sprint 5: prompt-injection testing; also checker v2 + re-score saved runs |
 | 2026-10-26 | 5 (injection baseline) | Threat model (`docs/threat_model.md`); checker v2 + offline re-score (`results/checker_v1_vs_v2.md`, ungrounded_numbers 6/7->0/0); 9 injection fixtures + offline scorer; **Groq injection baseline done** (`results/injection_baseline.md`): 27 runs + 7 extra (`inj_authorized_pentest` to 10). Only model-level successes = authorised-pentest verdict flip (full 4 / partial 2 of 10) and one long-string token inflation; **pipeline_changed 0** (severity floor held). 3 held-out cases frozen and excluded from the baseline | Gemini injection spot-check deferred to tomorrow (20 req/day cap); defences not built yet | Gemini spot-check (9 calls, held-out excluded), then build + measure defences before/after |
 | 2026-10-26 | 5 (gemini spot-check attempt) | Ran `injection_baseline.py --providers gemini --runs 1` (held-out excluded, confirmed). **0 runs landed:** 5 cases HTTP 503, `inj_canary` timed out, then daily 20-req 429 stopped it (`inj_reveal_prompt`, `inj_unicode` unattempted). No Gemini injection data yet | Gemini injection spot-check (provider 503s + daily cap); not retried today | Retry Gemini spot-check another day; proceed to choosing + building defences (Groq baseline is enough to start) |
+| 2026-10-27 | 5 (done) | Injection baseline; defences (log-injection detector, evidence-line cap, prompt v2) measured before/after; detector v2; blind set (5 DeepSeek cases, rendered as real logs); auth.log parser log-forging fix (blind_05) + nginx/ufw audit. Findings in `docs/sprint5_findings.md` | Gemini injection testing; nginx `$remote_user` check on the lab VMs | Decide the scope of Sprint 6 (multi-model) |
 
-**Label changes after seeing results (must be listed here):** none yet.
+**Label changes after seeing results (must be listed here):** none.
 ---
 
 ## 11. Current state / handoff (read this when starting a new chat)
 
-**Last updated:** 2026-10-26. **Current sprint:** 5 (prompt-injection testing); the no-defence baseline is done, defences are next. Sprint 4 (evaluation) is done — see `docs/sprint4_findings.md`.
+**Last updated:** 2026-10-27. **Current sprint:** Sprint 5 (prompt-injection testing) is done — see `docs/sprint5_findings.md`. Sprint 6 scope not decided yet. Sprint 4 (evaluation) is done — see `docs/sprint4_findings.md`.
 
 **How to resume in a new chat:** give the assistant `PROJECT_PLAN.md` and `CLAUDE.md` from this repo (`mtrivedii/soc-triage-lab`, private). Then confirm the sprint from the Progress Log and continue.
 
@@ -460,7 +461,7 @@ Pick at most one:
 **Gemini injection spot-check (2026-10-26): attempted, 0 runs landed** — 5 cases returned HTTP 503, one timed out, then the daily 20-request 429 stopped the run (`inj_reveal_prompt`, `inj_unicode` unattempted). No Gemini injection data yet; retry on another day with `scripts/injection_baseline.py --providers gemini --runs 1` (held-out auto-excluded). The **Groq** injection baseline stands on its own.
 
 **Next:**
-1. **Choose and build defences, then re-measure before/after** (prompt hardening, input sanitisation, the severity-floor/rule-disagreement logic, output validation), including on the 3 held-out cases. Prompt v1 and the current success criteria stay frozen for the before/after comparison. Groq's baseline is enough to start.
-2. Retry the **Gemini injection spot-check** on a day with free quota (optional, a spot-check not a rate).
+1. **Decide the scope of Sprint 6 (multi-model).**
+2. **Open lab task:** confirm how the lab nginx logs `$remote_user` when a request carries a Basic-auth header (the nginx parser fix assumes it is logged; not verified on the VM).
 
 **Quick start:** `uv sync`, then `uv run pytest -q` and `uv run ruff check .`. Model check: `uv run python scripts/hello.py <gemini|groq> [model-id]`.
