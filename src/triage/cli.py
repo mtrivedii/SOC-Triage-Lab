@@ -21,6 +21,8 @@ import yaml
 from triage import audit, report
 from triage.alert import Alert
 from triage.detectors import log_injection
+from triage.guardrails import check, load_allowlist
+from triage.llm.schema import TriageResult
 from triage.pipeline import alerts_for_case
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -85,7 +87,11 @@ def cmd_report(args) -> int:
     decision = audit.latest_decision(audit_path, args.alert_id, record.get("ts")) if audit_ok \
         else None
     hits = log_injection.suspicious_fields(alert, version=2)
-    text = report.render(alert, record, decision, audit_ok, hits)
+    guard = None
+    if record.get("valid") and record.get("result"):
+        guard = check(TriageResult.model_validate(record["result"]), alert, load_allowlist(),
+                      version=report.CHECKER_VERSION)
+    text = report.render(alert, record, guard, decision, audit_ok, hits)
     out = Path(args.out) if args.out else Path(args.root) / "reports" / f"{args.alert_id}.md"
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(text, encoding="utf-8", newline="\n")

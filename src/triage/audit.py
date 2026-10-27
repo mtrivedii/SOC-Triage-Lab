@@ -7,6 +7,10 @@ entry breaks the chain at the next one. Deleting entries from the END cannot be 
 file alone: record the head hash elsewhere and pass it to ``verify(expect_head=...)``.
 
 Only the ``triage approve`` CLI command writes here. Nothing in the AI path imports this module.
+
+Limitations (see docs/approval.md): ``analyst`` is free text with no identity check; deleting
+entries from the end is detected only with ``expect_head`` against a hash stored elsewhere; a
+full rewrite with recomputed hashes is not detectable from the file alone.
 """
 
 from __future__ import annotations

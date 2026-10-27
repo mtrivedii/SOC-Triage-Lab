@@ -22,12 +22,18 @@ def env(tmp_path):
         "ts": "2026-10-27T12:00:00+00:00", "case_id": CASE, "alert_id": alert.alert_id,
         "provider": "groq", "model": "openai/gpt-oss-120b", "prompt_version": "v1",
         "prompt_hash": "ec891d09" + "0" * 56, "valid": True,
-        "result": {"verdict": "malicious", "attack_type": "ssh_bruteforce", "confidence": 0.9,
-                   "attack_techniques": ["T1110.001"], "summary": "48 failed SSH logins.",
+        # benign on a high-floor alert -> model disagrees; 43304 is only in the evidence lines
+        # (lower severity in checker v2); 999 is nowhere (hard flag)
+        "result": {"verdict": "benign", "attack_type": "ssh_bruteforce", "confidence": 0.9,
+                   "attack_techniques": ["T1110.001"],
+                   "summary": "48 failed SSH logins from 192.168.214.130, client port 43304, "
+                              "999 accounts tried.",
                    "key_evidence": [], "recommended_next_steps": ["Block the source IP."]},
+        # stale report stored at run time (checker v1); the report must NOT use it
         "guardrails": {"hallucinated_techniques": [], "unverifiable_evidence": [],
                        "ungrounded_ips": [], "ungrounded_numbers": ["7"],
-                       "model_disagrees_with_rules": True, "final_severity": "high"},
+                       "model_disagrees_with_rules": False, "final_severity": "high",
+                       "checker_version": 1},
     }
     runs = tmp_path / "runs.jsonl"
     runs.write_text(json.dumps(record) + "\n", encoding="utf-8")
@@ -78,9 +84,18 @@ def test_report_draft_then_decision_with_flags_on_top(env):
     text = _report(env)
     assert "**Status: DRAFT.**" in text
     top = text.split("## AI triage")[0]
-    assert "numbers not in the alert: ['7']" in top
     assert "Model disagrees with the rules: YES" in top
     assert "Log-injection detector (v2): not flagged" in top
+
+
+def test_report_uses_checker_v2_and_ranks_evidence_only_numbers_lower(env):
+    top = _report(env).split("## AI triage")[0]
+    hard = next(ln for ln in top.splitlines() if ln.startswith("- Guardrail flags"))
+    soft = next(ln for ln in top.splitlines() if ln.startswith("- Lower severity"))
+    assert hard == "- Guardrail flags (checker v2): numbers not in the alert: ['999']"
+    assert "(checker v2, informational)" in soft and "['43304']" in soft
+    assert "'7'" not in top  # the stale stored v1 report is ignored
+    assert top.index("- Guardrail flags") < top.index("- Lower severity")
 
     _approve(env, "override", note="benign: scheduled password audit", analyst="alice")
     text = _report(env)

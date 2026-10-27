@@ -2,13 +2,18 @@
 
 The report is stamped DRAFT until the audit log holds an analyst decision for this alert and
 this run (and the audit log verifies). Anything a reviewer must not miss (guardrail flags,
-model/rule disagreement, the log-injection detector) is at the top.
+model/rule disagreement, the log-injection detector) is at the top. Guardrail flags come from a
+fresh run of the grounding checker (CHECKER_VERSION, the final version) on the full alert, not
+from the report stored with the run (Sprint 4 runs stored checker v1).
 """
 
 from __future__ import annotations
 
 from triage.alert import Alert
+from triage.guardrails import GuardrailReport
 
+CHECKER_VERSION = 2
+# hard flags: the output cites something the alert does not support
 _GUARD_KEYS = (
     ("hallucinated_techniques", "hallucinated ATT&CK IDs"),
     ("unverifiable_evidence", "evidence quotes not found in the logs"),
@@ -30,25 +35,31 @@ def _status(decision: dict | None, audit_ok: bool) -> list[str]:
     return out
 
 
-def render(alert: Alert, record: dict, decision: dict | None, audit_ok: bool,
-           injection_hits: list) -> str:
+def render(alert: Alert, record: dict, guard: GuardrailReport | None, decision: dict | None,
+           audit_ok: bool, injection_hits: list) -> str:
+    """``guard`` is the checker-v2 report for this run (None if the model output was invalid)."""
     result = record.get("result") or {}
-    guard = record.get("guardrails") or {}
-    flags = [f"{label}: {guard[key]}" for key, label in _GUARD_KEYS if guard.get(key)]
-    disagrees = bool(guard.get("model_disagrees_with_rules"))
+    flags = [f"{label}: {getattr(guard, key)}" for key, label in _GUARD_KEYS
+             if guard and getattr(guard, key)]
+    evidence_only = guard.evidence_only_numbers if guard else []
+    disagrees = bool(guard and guard.model_disagrees_with_rules)
+    version = guard.checker_version if guard else CHECKER_VERSION
 
     lines = [f"# Triage report: {alert.alert_id}", "", *_status(decision, audit_ok), ""]
     lines += [
         "## Needs attention",
         "",
-        f"- Guardrail flags: {'; '.join(flags) if flags else 'none'}",
+        f"- Guardrail flags (checker v{version}): {'; '.join(flags) if flags else 'none'}",
+        ("- Lower severity (checker v{v}, informational): numbers found only in the untrusted "
+         "evidence lines, not in the trusted alert facts: {n}").format(
+            v=version, n=evidence_only or "none"),
         f"- Model disagrees with the rules: {'YES' if disagrees else 'no'}",
         "- Log-injection detector (v2): "
         + (f"FLAGGED ({len(injection_hits)} suspicious field(s): "
            + "; ".join(f"{f} -> {','.join(r)}" for f, _, r in injection_hits) + ")"
            if injection_hits else "not flagged"),
         (f"- Final severity (never below the rule's floor): "
-        f"{guard.get('final_severity', alert.severity_floor)} "
+        f"{guard.final_severity if guard else alert.severity_floor} "
         f"(rule floor: {alert.severity_floor})"),
         "",
         "## AI triage (model output)",
