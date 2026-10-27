@@ -21,3 +21,14 @@ __pycache__/
 # analyst decisions and generated reports stay local (example log is committed)
 audit/audit_log.jsonl
 reports/
+
+# OS / editor / build output
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.egg-info/
+dist/
+build/
+.coverage
+htmlcov/

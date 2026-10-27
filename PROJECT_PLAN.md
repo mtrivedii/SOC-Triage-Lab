@@ -435,6 +435,8 @@ Pick at most one:
 
 ## 11. Current state / handoff (read this when starting a new chat)
 
+> **Note:** historical handoff, started on 2026-10-25 while the repo was still private. Parts of it (counts, next steps) are out of date; see the [README](README.md) for current results.
+
 **Last updated:** 2026-10-27. **Current sprint:** **Project complete** (Sprint 7 closed). Two success criteria in Section 1 are not fully met and are annotated there (9 instead of 10 lab cases; an accepted weak lab password in history). Sprint 6 (multi-model) was cut — see `docs/model_coverage.md`. Sprint 5 (prompt-injection testing) is done — see `docs/sprint5_findings.md`. Sprint 4 (evaluation) is done — see `docs/sprint4_findings.md`.
 
 **How to resume in a new chat:** give the assistant `PROJECT_PLAN.md` and `CLAUDE.md` from this repo (`mtrivedii/soc-triage-lab`, private). Then confirm the sprint from the Progress Log and continue.

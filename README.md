@@ -156,6 +156,8 @@ uv run python eval/parser_fix_report.py      # parser fix
 uv run triage verify-audit --audit-log audit/audit_log.example.jsonl
 ```
 
+`scripts/build_injection_cases.py` and `scripts/build_blind_cases.py` generated the committed injection fixtures.
+
 **Live model calls (API keys needed).** Copy `.env.example` to `.env` and add a Groq and/or Gemini key. Free tiers are enough but rate-limited.
 
 ```
@@ -168,6 +170,8 @@ uv run python scripts/injection_baseline.py --providers groq --config v2
 ## Lab setup
 
 Two VMware Workstation VMs on an isolated host-only network: a Kali Linux attacker (192.168.214.130) and an Ubuntu Server target (192.168.214.129) running sshd, nginx and ufw. Each scenario reverts the target to a clean snapshot, runs one attack or benign activity from Kali (hydra, nmap, gobuster, curl, ssh), and copies the target's logs into `data/raw/<case_id>/`. The ground truth for each case in `cases/` was written before any AI ran. Commands, timestamps and observations: [docs/lab_journal.md](docs/lab_journal.md).
+
+[CLAUDE.md](CLAUDE.md) and [PROJECT_PLAN.md](PROJECT_PLAN.md) are the rules and plan given to the AI assistant while building this, kept as a record of how it was constrained.
 
 ## Limitations
 
