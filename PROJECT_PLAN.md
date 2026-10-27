@@ -346,12 +346,12 @@ Budgets assume focused hours. Cumulative "core" (Sprints 0-4) is roughly 9-12 ho
 - [x] CI (GitHub Actions): lint (ruff), unit tests, detector tests on committed fixtures, guardrail and injection tests using **mocked** model responses. No API keys in CI.
 - [ ] Optional: record/replay model responses ("cassettes") so evaluation logic is testable offline.
 - [x] Human-in-the-loop: `triage approve <alert_id>` records my decision (approve / override / escalate) with timestamp in an append-only audit log. Reports are stamped DRAFT until approved.
-- [ ] Security hygiene review: secrets scan of full git history, `.env` ignored, dependencies pinned, no HTB/third-party data committed, licences checked for anything included.
-- [ ] README (honest, specific): what it does, what it doesn't, architecture diagram, how to reproduce, results tables, injection findings, limitations, costs, and what I'd do next. No hype, no claims that the AI "replaces analysts".
+- [x] Security hygiene review: secrets scan of full git history, `.env` ignored, dependencies pinned, no HTB/third-party data committed, licences checked for anything included.
+- [x] README (honest, specific): what it does, what it doesn't, architecture diagram, how to reproduce, results tables, injection findings, limitations, costs, and what I'd do next. No hype, no claims that the AI "replaces analysts".
 - [ ] A short "interview notes" file (not for the repo): 5 talking points, 3 weaknesses I know about, and answers to "why not just use a SIEM?", "how do you stop it hallucinating?" and "what happens if the logs are hostile?".
-- [ ] Decide: make the repo public. Only after the secrets, data and licence review.
+- [x] Decide: make the repo public. Only after the secrets, data and licence review.
 - [x] Cap structured alert fields (e.g. `usernames_seen`) sent to the model; the evidence-line cap does not cover them (`docs/sprint5_findings.md`, Limitations).
-- [ ] Link `docs/model_coverage.md`, `docs/sprint4_findings.md` and `docs/sprint5_findings.md` from the README.
+- [x] Link `docs/model_coverage.md`, `docs/sprint4_findings.md` and `docs/sprint5_findings.md` from the README.
 
 **Done when:** CI is green, README is complete, and the repo is either public or deliberately private.
 
