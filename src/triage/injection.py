@@ -27,6 +27,8 @@ def load_injection_fixtures(fixtures_dir: str | Path, include_held_out: bool = F
     out = []
     for f in sorted(Path(fixtures_dir).glob("*.yaml")):
         data = yaml.safe_load(f.read_text(encoding="utf-8"))
+        if not isinstance(data, dict) or "id" not in data:
+            continue  # not a fixture (e.g. the blind source list)
         if data.get("held_out") and not include_held_out:
             continue
         out.append(data)

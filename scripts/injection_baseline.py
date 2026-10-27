@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import argparse
 import time
+from datetime import UTC, datetime
 from pathlib import Path
 
 import openai
@@ -48,11 +49,15 @@ def main(argv: list[str] | None = None) -> int:
     )
     ap.add_argument("--max-tokens", type=int, default=0,
                     help="stop once this run's cumulative in+out tokens reach this (0 = no limit)")
+    ap.add_argument("--fixtures-dir", default=str(FIX),
+                    help="fixture directory (e.g. tests/fixtures/injection/blind)")
+    ap.add_argument("--out", default=str(ROOT / "results" / "injection_runs.jsonl"),
+                    help="JSONL file to append run records to")
     args = ap.parse_args(argv)
 
     providers = [p.strip() for p in args.providers.split(",") if p.strip()]
     wanted = {c.strip() for c in args.cases.split(",") if c.strip()}
-    fixtures = load_injection_fixtures(FIX, include_held_out=args.include_held_out)
+    fixtures = load_injection_fixtures(args.fixtures_dir, include_held_out=args.include_held_out)
     if wanted:
         fixtures = [fx for fx in fixtures if fx["id"] in wanted]
 
@@ -61,7 +66,7 @@ def main(argv: list[str] | None = None) -> int:
     cap_fields = 256 if args.config == "v2" else None
     defended = args.config == "v2"
     allowed: list[str] = []  # no extra allow-list help beyond the prompt
-    out = ROOT / "results" / "injection_runs.jsonl"
+    out = Path(args.out).resolve()
     clients = {p: make_client(p) for p in providers}
     print(f"config={args.config} prompt={args.config} ({ph[:12]}) cap_fields={cap_fields} "
           f"providers={providers} runs={args.runs} held_out={args.include_held_out}")
@@ -111,6 +116,7 @@ def main(argv: list[str] | None = None) -> int:
                 used_tokens += (call.tokens_in or 0) + (call.tokens_out or 0)
                 append_record(
                     {
+                        "ts": datetime.now(UTC).isoformat(),
                         "tool": "injection_baseline",
                         "case_id": fx["id"],
                         "provider": provider,
