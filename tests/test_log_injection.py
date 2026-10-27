@@ -128,3 +128,66 @@ def test_v2_keyword_stems_still_match():
 def test_v2_benign_real_usernames_not_flagged():
     for user in ("labuser", "victim", "root", "www-data"):
         assert log_injection._field_reasons(user, True, CFG, version=2) == []
+
+
+# --- structured-field cap (Sprint 7, configuration v2 only) -------------------------------------
+
+def _facts(content: str) -> dict:
+    import json
+
+    start = content.index("{")
+    end = content.index("\n\nALLOWED TECHNIQUE IDS")
+    return json.loads(content[start:end])
+
+
+def test_long_username_capped_in_model_input_but_full_in_alert():
+    long_user = "u" * 100
+    alert = _alert(usernames_seen=["labuser", long_user]).to_dict()
+    facts = _facts(build_messages("sys", alert, [], cap_fields=256)[1]["content"])
+    assert facts["usernames_seen"] == ["labuser", "u" * 64 + " [truncated 36 chars]"]
+    assert alert["usernames_seen"] == ["labuser", long_user]  # stored alert untouched
+
+
+def test_username_list_capped_to_20_items():
+    users = [f"user{i}" for i in range(25)]
+    alert = _alert(usernames_seen=users).to_dict()
+    facts = _facts(build_messages("sys", alert, [], cap_fields=256)[1]["content"])
+    assert facts["usernames_seen"] == users[:20] + ["[+5 more]"]
+    assert len(alert["usernames_seen"]) == 25
+
+
+def test_blind_05_username_capped_in_model_input():
+    fx = yaml.safe_load(
+        (ROOT / "tests" / "fixtures" / "injection" / "parser_fix" / "blind_05.yaml")
+        .read_text(encoding="utf-8")
+    )
+    forged = fx["injected_text"]
+    assert len(forged) > 64 and forged in fx["alert"]["usernames_seen"]
+    facts = _facts(build_messages("sys", fx["alert"], [], cap_fields=256)[1]["content"])
+    assert forged not in facts["usernames_seen"]
+    assert forged[:64] + f" [truncated {len(forged) - 64} chars]" in facts["usernames_seen"]
+    assert forged in fx["alert"]["usernames_seen"]
+
+
+def test_v1_model_input_unchanged_by_struct_cap():
+    import json
+
+    users = ["u" * 100] + [f"user{i}" for i in range(25)]
+    alert = _alert(usernames_seen=users).to_dict()
+    content = build_messages("sys", alert, [])[1]["content"]
+    meta = {k: v for k, v in alert.items() if k != "evidence_lines"}
+    assert content.startswith("ALERT (structured facts, trusted):\n" + json.dumps(meta, indent=2))
+    assert _facts(content)["usernames_seen"] == users
+
+
+def test_grounding_check_uses_full_alert_not_capped_copy():
+    from triage.guardrails import check, load_allowlist
+    from triage.llm.schema import TriageResult
+
+    long_user = "svc-" + "x" * 80
+    alert = _alert(usernames_seen=[long_user])
+    build_messages("sys", alert.to_dict(), [], cap_fields=256)
+    result = TriageResult(verdict="malicious", attack_type="ssh_bruteforce", confidence=0.9,
+                          summary="48 failed logins from 192.168.214.130", key_evidence=[])
+    check(result, alert, load_allowlist())
+    assert alert.usernames_seen == [long_user]

@@ -37,10 +37,31 @@ def get_model(provider: str) -> str:
     return _load_toml("models.toml")[provider]["model"]
 
 
+# Structured alert fields whose values come from attacker-controlled log text. Audited
+# (Sprint 7): only usernames_seen. The other facts are fixed rule strings, parsed timestamps,
+# a regex-validated IP, the target host or integer counts. Evidence lines are capped separately.
+ATTACKER_STRUCT_FIELDS = ("usernames_seen",)
+STRUCT_VALUE_CAP = 64
+STRUCT_LIST_CAP = 20
+
+
 def _cap_line(line: str, limit: int) -> str:
     if len(line) <= limit:
         return line
     return line[:limit] + f" [truncated {len(line) - limit} chars]"
+
+
+def _cap_struct(value):
+    """Cap one attacker-influenced structured value: strings to STRUCT_VALUE_CAP chars, lists to
+    STRUCT_LIST_CAP items (each item capped) plus a "[+N more]" marker."""
+    if isinstance(value, str):
+        return _cap_line(value, STRUCT_VALUE_CAP)
+    if isinstance(value, list):
+        kept = [_cap_struct(v) for v in value[:STRUCT_LIST_CAP]]
+        if len(value) > STRUCT_LIST_CAP:
+            kept.append(f"[+{len(value) - STRUCT_LIST_CAP} more]")
+        return kept
+    return value
 
 
 def build_messages(
@@ -49,14 +70,20 @@ def build_messages(
     """System prompt + a user message that separates trusted alert facts from the
     untrusted log evidence (wrapped in markers the prompt tells the model to distrust).
 
-    Defence 3 (input caps): when ``cap_fields`` is set, each evidence line sent to the model is
-    truncated to that many characters (marked ``[truncated N chars]``). The alert keeps the full
-    raw lines for humans; only the model's copy is capped.
+    Defence 3 (input caps, configuration v2): when ``cap_fields`` is set, each evidence line sent
+    to the model is truncated to that many characters (marked ``[truncated N chars]``), and each
+    attacker-influenced structured field (ATTACKER_STRUCT_FIELDS) is capped to STRUCT_VALUE_CAP
+    chars per value and STRUCT_LIST_CAP items per list (added Sprint 7). The alert keeps the full
+    values for humans and for the grounding check; only the model's copy is capped. With
+    ``cap_fields`` unset (v1) the input is unchanged.
     """
     meta = {k: v for k, v in alert.items() if k != "evidence_lines"}
     ev_lines = alert.get("evidence_lines", [])
     if cap_fields:
         ev_lines = [_cap_line(line, cap_fields) for line in ev_lines]
+        for name in ATTACKER_STRUCT_FIELDS:
+            if name in meta:
+                meta[name] = _cap_struct(meta[name])
     evidence = "\n".join(ev_lines)
     user = (
         "ALERT (structured facts, trusted):\n"
