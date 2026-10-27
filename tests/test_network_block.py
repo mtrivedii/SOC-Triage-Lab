@@ -19,7 +19,13 @@ def test_dns_lookup_blocked():
         socket.getaddrinfo("api.groq.com", 443)
 
 
-def test_real_api_client_call_fails_loudly():
+def test_real_api_client_call_fails_loudly(monkeypatch):
+    # Behind an HTTP(S) proxy the client would connect to the proxy (a local address the guard
+    # allows) and surface the proxy's reply as a connection error. Drop the proxy settings so the
+    # client tries to reach the API host directly, which is what this test is about.
+    for var in ("HTTPS_PROXY", "HTTP_PROXY", "ALL_PROXY"):
+        monkeypatch.delenv(var, raising=False)
+        monkeypatch.delenv(var.lower(), raising=False)
     client = openai.OpenAI(api_key="test-key", base_url="https://api.groq.com/openai/v1",
                            max_retries=0)
     with pytest.raises(NetworkBlocked):  # not swallowed into a retry/connection error
