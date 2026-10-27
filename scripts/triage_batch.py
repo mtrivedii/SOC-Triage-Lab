@@ -3,6 +3,7 @@ provider), so run it yourself with keys in .env - CI and the assistant never run
 
   uv run python scripts/triage_batch.py [--providers groq,gemini] [--runs 3]
                                         [--cases c1,c2] [--version v1] [--sleep 2]
+                                        [--cap-fields 256]
 
 For every case that raises a deterministic alert, it triages that alert N times per
 provider and appends each call to results/runs.jsonl (the raw per-run store, including
@@ -41,6 +42,8 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--cases", default="", help="comma-separated case_ids; default = all alerting")
     ap.add_argument("--version", default="v1")
     ap.add_argument("--sleep", type=float, default=2.0, help="seconds between calls (rate limits)")
+    ap.add_argument("--cap-fields", type=int, default=0,
+                    help="truncate over-long evidence fields to N chars (v2 defence; 0 = off)")
     args = ap.parse_args(argv)
 
     providers = [p.strip() for p in args.providers.split(",") if p.strip()]
@@ -54,8 +57,10 @@ def main(argv: list[str] | None = None) -> int:
     ph = prompt_hash(prompt)
     prices = load_prices()
     out = runs_path(ROOT)
+    cap_fields = args.cap_fields or None
 
-    print(f"prompt {args.version} ({ph[:12]}) | providers={providers} | runs={args.runs}")
+    print(f"prompt {args.version} ({ph[:12]}) | providers={providers} | runs={args.runs} "
+          f"| cap_fields={cap_fields}")
     clients = {p: make_client(p) for p in providers}  # real network clients
 
     exhausted: set[str] = set()
@@ -76,7 +81,8 @@ def main(argv: list[str] | None = None) -> int:
                 print(f"- {case['case_id']} | {provider}/{model} | run {i}...", flush=True)
                 try:
                     call = triage_call(
-                        alert.to_dict(), model, clients[provider], prompt, list(allow)
+                        alert.to_dict(), model, clients[provider], prompt, list(allow),
+                        cap_fields=cap_fields,
                     )
                 except openai.RateLimitError as exc:
                     print(f"  RATE LIMIT ({provider}): {getattr(exc, 'message', str(exc))}")
@@ -108,6 +114,7 @@ def main(argv: list[str] | None = None) -> int:
                     prices=prices,
                     guardrails=report,
                 )
+                record["cap_fields"] = cap_fields
                 append_record(record, out)
                 total += 1
                 if args.sleep:
