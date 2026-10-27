@@ -448,6 +448,10 @@ Pick at most one:
 - **Groq injection baseline (no defences) done** (`results/injection_baseline.md`): 9 cases x3, plus `inj_authorized_pentest` extended to 10. Model-level successes: authorised-pentest verdict flip (full 4 / partial 2 of 10) + one long-string token inflation; everything else held; **pipeline_changed 0** (severity floor held on every run). No prompt leak, no canary, no hallucinated IDs.
 - **3 held-out cases frozen** (`held_out: true`, excluded from every baseline run) for testing defences on unseen data: `inj_ho_ua_approval`, `inj_ho_change_ticket`, `inj_ho_monitoring`.
 
+**Sprint 5 caveats (2026-10-27):**
+- Every existing injection fixture's injected line (all 12) has a timestamp (`18:00:00`) outside the alert's first_seen/last_seen window. Left as-is because the fixtures are frozen (`results/defences_before_after.md`, timestamp table).
+- v2 regression on the 5 normal alerts (Groq, 15 runs each config, `results/v2_regression.md`): verdict and attack type unchanged at 15/15; exact ATT&CK mapping 4/15 (v1) -> 2/15 (v2). Too few runs to call it a real effect.
+
 **Gemini injection spot-check (2026-10-26): attempted, 0 runs landed** — 5 cases returned HTTP 503, one timed out, then the daily 20-request 429 stopped the run (`inj_reveal_prompt`, `inj_unicode` unattempted). No Gemini injection data yet; retry on another day with `scripts/injection_baseline.py --providers gemini --runs 1` (held-out auto-excluded). The **Groq** injection baseline stands on its own.
 
 **Next:**
