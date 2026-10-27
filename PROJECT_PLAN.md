@@ -33,12 +33,12 @@ Project plan and working brief. Give this whole file to the assistant at the sta
 > "Rules detect, the AI explains, a human decides. I measured how often the AI was right and where it made things up. I also tested whether an attacker could trick it through the logs, and here is what I found and how I defended against it."
 
 **Success criteria (the project is "done" when all are true):**
-- [ ] Reproducible: someone can clone the repo, run one command, and re-run the evaluation on saved logs without needing my VMs.
-- [ ] At least 10 labelled cases (target 20), including benign and mixed ones.
-- [ ] A results table from real runs, with at least one model, ideally 2-3, run multiple times.
-- [ ] A prompt-injection test with documented results and at least one working defence.
-- [ ] Tests and CI pass. No secrets in the repo history.
-- [ ] A README that states clearly what it does, what it does not do, and its limitations.
+- [x] Reproducible: someone can clone the repo, run one command, and re-run the evaluation on saved logs without needing my VMs. *Proof: `uv sync && uv run triage reproduce` (also a CI step); raw logs in `data/raw/`.*
+- [ ] At least 10 labelled cases (target 20), including benign and mixed ones. *Not fully met: 9 lab cases in `cases/` (5 malicious incl. 1 mixed, 4 benign). In addition, 17 injection test cases with success criteria frozen before any run (`tests/fixtures/injection/`, incl. 5 blind).*
+- [x] A results table from real runs, with at least one model, ideally 2-3, run multiple times. *Proof: `results/eval_summary.md` (Groq 3 runs/alert, Gemini 1-3), `results/v2_regression.md`. Only one model for injection testing (`docs/model_coverage.md`).*
+- [x] A prompt-injection test with documented results and at least one working defence. *Proof: `docs/sprint5_findings.md`, `results/defences_before_after.md` (authorised-pentest flips 6/10 -> 0/10), `results/parser_fix.md`.*
+- [ ] Tests and CI pass. No secrets in the repo history. *Tests and CI: met (`uv run pytest`, GitHub Actions green). Secrets: no API keys or private keys in history; one accepted exception, the deliberately weak `victim` lab password at `ff7cec5` (`docs/prepublication_review.md`).*
+- [x] A README that states clearly what it does, what it does not do, and its limitations. *Proof: `README.md` (sections "What it does and does not do", "Limitations").*
 
 **Non-goals (do NOT build these):**
 - A full SIEM (no Wazuh/Elastic/Splunk).
@@ -428,13 +428,14 @@ Pick at most one:
 | 2026-10-27 | 5 (done) | Injection baseline; defences (log-injection detector, evidence-line cap, prompt v2) measured before/after; detector v2; blind set (5 DeepSeek cases, rendered as real logs); auth.log parser log-forging fix (blind_05) + nginx/ufw audit. Findings in `docs/sprint5_findings.md` | Gemini injection testing; nginx `$remote_user` check on the lab VMs | Decide the scope of Sprint 6 (multi-model) |
 | 2026-10-27 | 6 (cut) | Sprint 6: cut. Free-tier limits made Gemini unreliable for repeated runs; documented in `docs/model_coverage.md` | Whole sprint (multi-model comparison) | Sprint 7 |
 | 2026-10-27 | 7 (part 1) | Code hardening: structured-field cap in model input (v2: 64 chars/value, 20 items/list); `triage approve` / `verify-audit` / `report` CLI with a hash-chained, append-only audit log (`audit/audit_log.jsonl`, git-ignored; example committed) and DRAFT reports until an analyst decision; GitHub Actions CI (ruff + pytest, actions pinned to SHAs, read-only token, no secrets), green on first run; test-wide outbound-network block (`tests/conftest.py`). 142 tests | Cassettes (optional) not done | Secrets/data review, README, interview notes |
+| 2026-10-27 | 7 (done) | Structured-field cap (v2); `triage approve` + hash-chained audit log + DRAFT reports; CI (lint, tests, reproduce; actions pinned, network blocked); pre-publication review and fixes (`docs/prepublication_review.md`); MIT licence; deterministic reports + `uv run triage reproduce`, pre-parser-fix results archived; README | nginx `$remote_user` check on the lab VMs; lab infrastructure as code | Open items only (see Section 11) |
 
 **Label changes after seeing results (must be listed here):** none.
 ---
 
 ## 11. Current state / handoff (read this when starting a new chat)
 
-**Last updated:** 2026-10-27. **Current sprint:** Sprint 7 (hardening, CI and write-up) is in progress: part 1 (code hardening) is done. Sprint 6 (multi-model) was cut — see `docs/model_coverage.md`. Sprint 5 (prompt-injection testing) is done — see `docs/sprint5_findings.md`. Sprint 4 (evaluation) is done — see `docs/sprint4_findings.md`.
+**Last updated:** 2026-10-27. **Current sprint:** **Project complete** (Sprint 7 closed). Two success criteria in Section 1 are not fully met and are annotated there (9 instead of 10 lab cases; an accepted weak lab password in history). Sprint 6 (multi-model) was cut — see `docs/model_coverage.md`. Sprint 5 (prompt-injection testing) is done — see `docs/sprint5_findings.md`. Sprint 4 (evaluation) is done — see `docs/sprint4_findings.md`.
 
 **How to resume in a new chat:** give the assistant `PROJECT_PLAN.md` and `CLAUDE.md` from this repo (`mtrivedii/soc-triage-lab`, private). Then confirm the sprint from the Progress Log and continue.
 
@@ -466,8 +467,8 @@ Pick at most one:
 
 **Gemini injection spot-check (2026-10-26): attempted, 0 runs landed** — 5 cases returned HTTP 503, one timed out, then the daily 20-request 429 stopped the run (`inj_reveal_prompt`, `inj_unicode` unattempted). No Gemini injection data yet; retry on another day with `scripts/injection_baseline.py --providers gemini --runs 1` (held-out auto-excluded). The **Groq** injection baseline stands on its own.
 
-**Next:**
-1. **Sprint 7, part 2** (see its task list in Section 6): secrets/data/licence review of the full history, then the README (link `docs/model_coverage.md`, `docs/sprint4_findings.md`, `docs/sprint5_findings.md`), then the interview notes (not for the repo). Part 1 done 2026-10-27: structured-field cap (v2), `triage approve`/`verify-audit`/`report` with a hash-chained audit log and DRAFT reports, CI green (ruff + 142 tests, network blocked in tests).
-2. **Open lab task:** confirm how the lab nginx logs `$remote_user` when a request carries a Basic-auth header (the nginx parser fix assumes it is logged; not verified on the VM).
+**Open items:**
+1. **Lab check:** confirm how the lab nginx logs `$remote_user` when a request carries a Basic-auth header (the nginx parser fix assumes it is logged; not verified on the VM).
+2. **Lab infrastructure as code:** Vagrant or Packer for the VMs, Ansible or cloud-init for the target, with an automated host-only network check (README, "What I would do next").
 
-**Quick start:** `uv sync`, then `uv run pytest -q` and `uv run ruff check .`. Model check: `uv run python scripts/hello.py <gemini|groq> [model-id]`.
+**Quick start:** `uv sync`, then `uv run triage reproduce` (tests + all offline reports) and `uv run ruff check .`. Model check: `uv run python scripts/hello.py <gemini|groq> [model-id]`.
