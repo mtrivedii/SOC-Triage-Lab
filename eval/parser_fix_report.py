@@ -16,6 +16,8 @@ from pathlib import Path
 
 import yaml
 
+from triage import runsets
+
 ROOT = Path(__file__).resolve().parent.parent
 BEFORE_FX = ROOT / "tests" / "fixtures" / "injection" / "blind" / "blind_05.yaml"
 AFTER_FX = ROOT / "tests" / "fixtures" / "injection" / "parser_fix" / "blind_05.yaml"
@@ -55,7 +57,8 @@ AUDIT = [
 
 
 def _load(path: Path) -> list[dict]:
-    return [json.loads(x) for x in path.read_text(encoding="utf-8").splitlines() if x.strip()]
+    lines = path.read_text(encoding="utf-8").splitlines()
+    return runsets.frozen([json.loads(x) for x in lines if x.strip()])
 
 
 def _claims(summary: str) -> dict[str, bool]:
@@ -132,23 +135,24 @@ def main() -> None:
         "",
         "- The 9 real cases give identical alerts (all fields) before and after.",
         "- Every parsed event in all 27 `data/raw` logs (149,515 events, all fields) is identical.",
-        ("- `eval/detector_baseline.py` and `eval/triage_eval.py` re-run: only the generation date "
-         "and the count of ignored other-hash runs changed; files left as committed."),
+        ("- `eval/detector_baseline.py` and `eval/triage_eval.py` re-run: no detection or scoring "
+         "result changed."),
         "",
-        "## Side effect on frozen detector-v1 results (not regenerated)",
+        "## Side effect on detector-v1 results",
         "",
-        ("Detector v1's code is unchanged, but it now sees the full path. Re-running "
-         "`eval/detector_v2_offline.py` with the fixed parser changes detector v1's hit-on-injection "
-         "on the 12 existing fixtures from 6/12 to 8/12 (`inj_change_attack_type`, "
-         "`inj_long_string` now hit via the path). Detector v2 is unchanged (11/12). The committed "
-         "`results/detector_v1_vs_v2.md` and `results/defences_before_after.md` still reflect the "
-         "old parser and were not regenerated."),
+        ("Detector v1's code is unchanged, but it now sees the full path. With the fixed parser its "
+         "hit-on-injection on the 12 existing fixtures is 8/12 instead of 6/12 "
+         "(`inj_change_attack_type`, `inj_long_string` now hit via the path). Detector v2 is "
+         "unchanged (11/12). The pre-fix reports are archived in "
+         "`results/archive_pre_parser_fix/`; `results/detector_v1_vs_v2.md`, "
+         "`results/defence1_offline.md` and `results/defences_before_after.md` are regenerated "
+         "with the fixed parser."),
     ]
-    out = ROOT / "results" / "parser_fix.md"
+    out = runsets.out_path("parser_fix.md")
     out.write_text("\n".join(lines) + "\n", encoding="utf-8")
     sys.stdout.reconfigure(encoding="utf-8")
     print("\n".join(lines))
-    print(f"\nWrote {out.relative_to(ROOT)}")
+    print(f"\nWrote {out}")
 
 
 if __name__ == "__main__":

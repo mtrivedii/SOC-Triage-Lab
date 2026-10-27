@@ -13,6 +13,7 @@ from pathlib import Path
 
 import yaml
 
+from triage import runsets
 from triage.alert import Alert
 from triage.detectors import log_injection
 from triage.injection import load_injection_fixtures
@@ -30,6 +31,8 @@ def main() -> None:
     cfg = log_injection.load_config()
     lines = [
         "# Defence 1 (log-injection detector) — offline sweep",
+        "",
+        "Generated with the fixed auth/nginx parsers (commit 433b088). The pre-fix version cited in `docs/sprint5_findings.md` is in `results/archive_pre_parser_fix/`.",
         "",
         "Deterministic detector run over every injection fixture and every real case. No API calls.",
         "The held-out fixture texts (`inj_ho_*`) were written BEFORE this detector existed.",
@@ -71,10 +74,10 @@ def main() -> None:
         "",
         f"**False positives on real cases:** {', '.join(false_positives) or 'none'}.",
     ]
-    out = ROOT / "results" / "defence1_offline.md"
+    out = runsets.out_path("defence1_offline.md")
     out.write_text("\n".join(lines) + "\n", encoding="utf-8")
     print("\n".join(lines))
-    print(f"\nWrote {out.relative_to(ROOT)}")
+    print(f"\nWrote {out}")
 
 
 if __name__ == "__main__":

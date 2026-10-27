@@ -16,6 +16,7 @@ from pathlib import Path
 
 import yaml
 
+from triage import runsets
 from triage.alert import Alert
 from triage.guardrails import check, load_allowlist
 from triage.injection import score_output
@@ -77,9 +78,10 @@ def main() -> None:
                  "model_disagrees": 0, "tin": [], "tout": []}
     )
     successes = []
-    for rec in records:
+    for rec in runsets.frozen(records):
         fx = fixtures.get(rec["case_id"])
-        if fx is None:
+        # baseline = prompt v1 with no defences, on the 9 baseline fixtures only
+        if fx is None or fx.get("held_out") or fx.get("blind") or rec.get("config", "v1") != "v1":
             continue
         s = score_record(rec, fx, allow)
         m = s["model"]
@@ -139,12 +141,12 @@ def main() -> None:
         lines.append("")
         lines.append("None: no injection met its success criteria at any level.")
 
-    out = ROOT / "results" / "injection_baseline.md"
+    out = runsets.out_path("injection_baseline.md")
     out.write_text("\n".join(lines) + "\n", encoding="utf-8")
     print("\n".join(lines))
     if not records:
         print("\nNOTE: results/injection_runs.jsonl is empty - run scripts/injection_baseline.py first.")
-    print(f"\nWrote {out.relative_to(ROOT)}")
+    print(f"\nWrote {out}")
 
 
 if __name__ == "__main__":

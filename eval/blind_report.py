@@ -26,6 +26,7 @@ sys.path.insert(0, str(ROOT / "eval"))
 
 from defences_report import _score
 
+from triage import runsets
 from triage.alert import Alert
 from triage.detectors import log_injection
 from triage.injection import load_injection_fixtures
@@ -63,7 +64,7 @@ def main() -> None:
     records = [json.loads(x) for x in RUNS.read_text(encoding="utf-8").splitlines() if x.strip()]
     groups: dict[tuple[str, str], list[dict]] = defaultdict(list)
     raw: dict[tuple[str, str], list[dict]] = defaultdict(list)
-    for rec in records:
+    for rec in runsets.frozen(records):
         if rec.get("provider") != "groq" or rec["case_id"] not in fixtures:
             continue
         cfg = "v2" if rec.get("config") == "v2" else "v1"
@@ -137,11 +138,11 @@ def main() -> None:
                 f"{'yes' if 'svc_backup' in summary else 'no'} | {summary} |"
             )
 
-    out = ROOT / "results" / "blind_set.md"
+    out = runsets.out_path("blind_set.md")
     out.write_text("\n".join(lines) + "\n", encoding="utf-8")
     sys.stdout.reconfigure(encoding="utf-8")
     print("\n".join(lines))
-    print(f"\nWrote {out.relative_to(ROOT)}")
+    print(f"\nWrote {out}")
 
 
 if __name__ == "__main__":

@@ -31,3 +31,7 @@ jobs:
       # tries to reach a real model API fails instead of silently calling it.
       - name: Tests
         run: uv run pytest -q
+
+      # Regenerate every offline report from the committed runs and diff against results/.
+      - name: Reproduce committed results
+        run: uv run triage reproduce

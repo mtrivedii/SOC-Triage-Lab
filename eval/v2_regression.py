@@ -18,6 +18,7 @@ sys.path.insert(0, str(ROOT / "eval"))
 
 from triage_eval import filter_by_hash, load_cases, load_runs, summarize
 
+from triage import runsets
 from triage.llm.prompts import load_prompt, prompt_hash
 
 PROVIDER = "groq"
@@ -41,7 +42,8 @@ def _exact(records: list[dict], cases: dict[str, dict]) -> dict[str, int]:
 
 def main() -> None:
     cases = load_cases(ROOT)
-    records = [r for r in load_runs(ROOT / "results" / "runs.jsonl") if r.get("provider") == PROVIDER]
+    records = [r for r in runsets.frozen(load_runs(ROOT / "results" / "runs.jsonl"))
+               if r.get("provider") == PROVIDER]
     per_cfg = {}
     for version in ("v1", "v2"):
         ph = prompt_hash(load_prompt(version))
@@ -95,10 +97,10 @@ def main() -> None:
         lines.append(f"| {version} | {t['runs']} | {t['verdict']}/{t['runs']} | "
                      f"{t['type']}/{t['runs']} | {t['exact']}/{t['runs']} |")
 
-    out = ROOT / "results" / "v2_regression.md"
+    out = runsets.out_path("v2_regression.md")
     out.write_text("\n".join(lines) + "\n", encoding="utf-8")
     print("\n".join(lines))
-    print(f"\nWrote {out.relative_to(ROOT)}")
+    print(f"\nWrote {out}")
 
 
 if __name__ == "__main__":

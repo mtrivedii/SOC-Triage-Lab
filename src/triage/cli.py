@@ -3,6 +3,7 @@
   triage approve <alert_id> --decision approve|override|escalate --analyst NAME [--note "..."]
   triage verify-audit [--expect-head HASH]
   triage report <alert_id> [--out PATH]
+  triage reproduce [--skip-tests]
 
 Offline only: reads saved triage runs (results/runs.jsonl) and rebuilds the alert from its case
 with the deterministic pipeline. A decision is bound to one triage run (its timestamp); by
@@ -18,7 +19,7 @@ from pathlib import Path
 
 import yaml
 
-from triage import audit, report
+from triage import audit, report, reproduce
 from triage.alert import Alert
 from triage.detectors import log_injection
 from triage.guardrails import check, load_allowlist
@@ -99,6 +100,10 @@ def cmd_report(args) -> int:
     return 0
 
 
+def cmd_reproduce(args) -> int:
+    return reproduce.run(skip_tests=args.skip_tests)
+
+
 def build_parser() -> argparse.ArgumentParser:
     ap = argparse.ArgumentParser(prog="triage", description=__doc__.splitlines()[0])
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -128,6 +133,11 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--root", default=str(ROOT), help=argparse.SUPPRESS)
     common(p)
     p.set_defaults(func=cmd_report)
+
+    p = sub.add_parser("reproduce",
+                       help="run the tests and regenerate every offline report; diff vs results/")
+    p.add_argument("--skip-tests", action="store_true", help="only regenerate and compare reports")
+    p.set_defaults(func=cmd_reproduce)
     return ap
 
 

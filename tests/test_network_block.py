@@ -5,7 +5,8 @@ import threading
 
 import openai
 import pytest
-from conftest import NetworkBlocked
+
+from triage.netguard import NetworkBlocked
 
 
 def test_outbound_connection_blocked():

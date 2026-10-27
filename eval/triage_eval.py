@@ -17,6 +17,7 @@ from pathlib import Path
 import yaml
 
 from triage.llm.prompts import load_prompt, prompt_hash
+from triage.runsets import frozen, out_path
 
 ROOT = Path(__file__).resolve().parent.parent
 _GUARDRAIL_KEYS = (
@@ -208,27 +209,27 @@ def main() -> None:
     args = ap.parse_args()
 
     cases = load_cases()
-    records = load_runs(ROOT / "results" / "runs.jsonl")
+    records = frozen(load_runs(ROOT / "results" / "runs.jsonl"))
     prompt_note = None
     if not args.all_hashes:
         wanted = args.prompt_hash or prompt_hash(load_prompt(args.version))
-        records, ignored = filter_by_hash(records, wanted)
+        records, _ = filter_by_hash(records, wanted)
         prompt_note = (
-            f"Scored {len(records)} run(s) at prompt {args.version} ({wanted[:12]}...); "
-            f"ignored {ignored} run(s) at other prompt hashes."
+            f"Scored {len(records)} run(s) at prompt {args.version} ({wanted[:12]}...), "
+            "recorded before the results were frozen; runs at other prompt hashes are excluded."
         )
 
     summary = summarize(records, cases)
     md = render_markdown(summary, cases, prompt_note)
-    out = ROOT / "results" / "eval_summary.md"
+    out = out_path("eval_summary.md")
     out.write_text(md, encoding="utf-8")
     # Raw numbers (incl. decimal precision/recall) kept in a sibling JSON for machine use.
-    out_json = ROOT / "results" / "eval_summary.json"
+    out_json = out_path("eval_summary.json")
     out_json.write_text(json.dumps(summary, indent=2), encoding="utf-8")
     print(md)
     if not records:
         print("NOTE: no runs to score - run scripts/triage_batch.py (live) first.")
-    print(f"Wrote {out.relative_to(ROOT)} and {out_json.relative_to(ROOT)}")
+    print(f"Wrote {out} and {out_json}")
 
 
 if __name__ == "__main__":

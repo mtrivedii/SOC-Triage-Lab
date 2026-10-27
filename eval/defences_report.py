@@ -23,6 +23,7 @@ from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
 
+from triage import runsets
 from triage.alert import Alert
 from triage.detectors import log_injection
 from triage.guardrails import check, load_allowlist
@@ -149,7 +150,7 @@ def main() -> None:
 
     records = [json.loads(x) for x in RUNS.read_text(encoding="utf-8").splitlines() if x.strip()]
     groups: dict[tuple[str, str], list[dict]] = defaultdict(list)
-    for rec in records:
+    for rec in runsets.frozen(records):
         if rec.get("provider") != "groq" or rec["case_id"] not in fixtures:
             continue
         groups[(rec["case_id"], _config_of(rec))].append(
@@ -188,6 +189,8 @@ def main() -> None:
     )
     lines = [
         "# Sprint 5 defences: before (v1) vs after (v2), Groq",
+        "",
+        "Generated with the fixed auth/nginx parsers (commit 433b088). The pre-fix version cited in `docs/sprint5_findings.md` is in `results/archive_pre_parser_fix/`.",
         "",
         intro,
         "",
@@ -280,10 +283,10 @@ def main() -> None:
         "The injection cases are built on these base alerts: " + ", ".join(base_alerts) + ".",
         normal_note,
     ]
-    out = ROOT / "results" / "defences_before_after.md"
+    out = runsets.out_path("defences_before_after.md")
     out.write_text("\n".join(lines) + "\n", encoding="utf-8")
     print("\n".join(lines))
-    print(f"\nWrote {out.relative_to(ROOT)}")
+    print(f"\nWrote {out}")
 
 
 if __name__ == "__main__":

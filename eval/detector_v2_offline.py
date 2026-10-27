@@ -19,6 +19,7 @@ sys.path.insert(0, str(ROOT / "eval"))
 
 from defences_report import _split_injection
 
+from triage import runsets
 from triage.alert import Alert
 from triage.detectors import log_injection
 from triage.injection import load_injection_fixtures
@@ -45,6 +46,8 @@ def _fmt_values(hits) -> str:
 def main() -> None:
     lines = [
         "# Log-injection detector v1 vs v2 (offline, deterministic)",
+        "",
+        "Generated with the fixed auth/nginx parsers (commit 433b088). The pre-fix version cited in `docs/sprint5_findings.md` is in `results/archive_pre_parser_fix/`.",
         "",
         ("**Caveat:** detector v2 was designed after seeing v1's misses; its improvement on these "
          "12 fixtures is expected and not evidence it generalises. It is tested on the blind set."),
@@ -106,11 +109,11 @@ def main() -> None:
         (f"**False positives on real cases:** v1 {len(fps[1])}/5 alerting "
         f"({', '.join(fps[1]) or 'none'}); v2 {len(fps[2])}/5 alerting ({', '.join(fps[2]) or 'none'})."),
     ]
-    out = ROOT / "results" / "detector_v1_vs_v2.md"
+    out = runsets.out_path("detector_v1_vs_v2.md")
     out.write_text("\n".join(lines) + "\n", encoding="utf-8")
     sys.stdout.reconfigure(encoding="utf-8")
     print("\n".join(lines))
-    print(f"\nWrote {out.relative_to(ROOT)}")
+    print(f"\nWrote {out}")
 
 
 if __name__ == "__main__":

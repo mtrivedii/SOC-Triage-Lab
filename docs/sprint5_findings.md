@@ -145,7 +145,7 @@ After the fix, 2 of 3 model summaries still quote "accepted publickey for svc_ba
 - **Bias.** Prompt v2 and detector v2 were designed after their test cases were known. Only the blind test is independent of them. It is limited to 5 cases.
 - **Unverified on the lab.** The nginx `$remote_user` cases assume that nginx logs the Basic-auth username. This has not been confirmed on the lab VM.
 - **Cap coverage.** The evidence-line cap does not apply to structured alert fields. A long attacker-controlled username in usernames_seen reaches the model untruncated. The long-string test case used the request path, so it did not test this. A structured-field cap (64 characters per value, 20 items per list) was added in Sprint 7. The Sprint 5 v2 results were measured without it and were not re-run.
-- **Result files.** The committed detector results predate the parser fix.
+- **Result files.** The detector figures in this document predate the parser fix. Those reports are archived in results/archive_pre_parser_fix/; the files in results/ are regenerated with the fixed parser.
 
 ## 10. Conclusions
 
@@ -158,8 +158,8 @@ After the fix, 2 of 3 model summaries still quote "accepted publickey for svc_ba
 ## 11. Related files
 
 - results/injection_baseline.md: baseline results
-- results/defences_before_after.md: v1 compared with v2
-- results/detector_v1_vs_v2.md: detector comparison
+- results/archive_pre_parser_fix/defences_before_after.md: v1 compared with v2 (as cited; current version: results/defences_before_after.md)
+- results/archive_pre_parser_fix/detector_v1_vs_v2.md: detector comparison (as cited; current version: results/detector_v1_vs_v2.md)
 - results/v2_regression.md: effect of v2 on normal alerts
 - results/blind_set.md: blind test
 - results/parser_fix.md: parser fix and audit

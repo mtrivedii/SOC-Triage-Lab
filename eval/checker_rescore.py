@@ -16,6 +16,7 @@ from pathlib import Path
 
 import yaml
 
+from triage import runsets
 from triage.guardrails import check, load_allowlist
 from triage.llm.prompts import load_prompt, prompt_hash
 from triage.llm.schema import TriageResult
@@ -41,11 +42,11 @@ def main() -> None:
         if found:
             alerts[c["case_id"]] = found[0]
 
-    runs = [
+    runs = runsets.frozen([
         json.loads(x)
         for x in (ROOT / "results" / "runs.jsonl").read_text(encoding="utf-8").splitlines()
         if x.strip()
-    ]
+    ])
     runs = [r for r in runs if r.get("prompt_hash") == frozen and r.get("valid")]
 
     # counts[(provider, version, flag)] = number of runs where that flag fired
@@ -94,10 +95,10 @@ def main() -> None:
         "",
         v2_note,
     ]
-    out = ROOT / "results" / "checker_v1_vs_v2.md"
+    out = runsets.out_path("checker_v1_vs_v2.md")
     out.write_text("\n".join(lines) + "\n", encoding="utf-8")
     print("\n".join(lines))
-    print(f"\nWrote {out.relative_to(ROOT)}")
+    print(f"\nWrote {out}")
 
 
 if __name__ == "__main__":
